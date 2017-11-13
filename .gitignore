@@ -1,0 +1,29 @@
+# Compiled Object files
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.d
+*.pcm
+
+# Plots
+*.root
+*.pdf
+*.png
+*.jpeg
+*.C
+*.eps
+
+# Text files
+*.txt
+*.yaml
+
+# Directories
+Fits/
+Plots/
+
+# Scripts
+*/*.sh
+
+#Executable
+run_categorisation
