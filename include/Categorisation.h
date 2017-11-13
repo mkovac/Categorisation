@@ -61,6 +61,7 @@ public:
    void ResetPerEventStuff();
    void SaveHistograms( TString );
    void DoLeptonMatching();
+   void UseMatchingInfo();
    
    int FindCurrentProcess( TString );
    int FindCurrentAssocDecay();
@@ -80,7 +81,7 @@ private:
    TH1F* p_hist_counters;
    
    int current_process_, current_final_state_, current_category_, current_assoc_dec_;
-   float lumi_, k_factor_, partial_sample_weight_, m4l_min_, m4l_max_;
+   float lumi_, k_factor_, partial_sample_weight_, m4l_min_, m4l_max_, delta_R_;
    double gen_sum_weights_, event_weight_, num_gen_events_;
    
    int reco_ch_1, reco_ch_2, reco_ch_3;
@@ -98,7 +99,9 @@ private:
    vector<float> gen_assoc_lep_eta_;
    vector<float> gen_assoc_lep_phi_;
    
-// Lepton matching counters
+// Lepton matching counter
+   map<TString, map<int, int>> counter_map;
+   
    int n_reco_lep_matched_to_gen_H_lep[4]     = {0, 0, 0, 0};
    int n_cand_lep_matched_to_gen_H_lep[4]     = {0, 0, 0, 0};
    int n_reco_lep_matched_to_gen_assoc_lep[2] = {0, 0};

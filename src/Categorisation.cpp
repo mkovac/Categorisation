@@ -737,33 +737,44 @@ void Categorisation::DoLeptonMatching()
       {
          for ( int i_cand_lep = 0; i_cand_lep < 4; i_cand_lep++ )
          {
-         
-            cout << Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_H_lep), gen_H_lep_phi_.at(i_gen_H_lep), LepEta->at(i_cand_lep), LepPhi->at(i_cand_lep)) << endl;
-         
-            if ( Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_H_lep), gen_H_lep_phi_.at(i_gen_H_lep), LepEta->at(i_cand_lep), LepPhi->at(i_cand_lep)) < 0.1 )
+            delta_R_ = Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_H_lep), gen_H_lep_phi_.at(i_gen_H_lep),
+                                         LepEta->at(i_cand_lep), LepPhi->at(i_cand_lep));
+            if ( delta_R_ < 0.1 )
             {
-               n_reco_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
-               n_cand_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
-               n_gen_lep_matched_to_reco_lep[i_cand_lep]++;
-               n_gen_lep_matched_to_cand_lep[i_cand_lep]++;
+               counter_map["n_reco_lep_matched_to_gen_H_lep"][i_gen_H_lep]++;
+               counter_map["n_cand_lep_matched_to_gen_H_lep"][i_gen_H_lep]++;
+               counter_map["n_gen_lep_matched_to_reco_lep"][i_cand_lep]++;
+               counter_map["n_gen_lep_matched_to_cand_lep"][i_cand_lep]++;
+
+//               n_reco_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
+//               n_cand_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
+//               n_gen_lep_matched_to_reco_lep[i_cand_lep]++;
+//               n_gen_lep_matched_to_cand_lep[i_cand_lep]++;
          
                if ( i_cand_lep < 2 )
                {
-                  n_gen_H_lep_matched_to_Z1_lep[i_cand_lep]++;
+                  counter_map["n_gen_H_lep_matched_to_Z1_lep"][i_cand_lep]++;
+//                  n_gen_H_lep_matched_to_Z1_lep[i_cand_lep]++;
                }
                else
                {
-                  n_gen_H_lep_matched_to_Z2_lep[i_cand_lep-2]++;
+                  counter_map["n_gen_H_lep_matched_to_Z2_lep"][i_cand_lep - 2]++;
+//                  n_gen_H_lep_matched_to_Z2_lep[i_cand_lep - 2]++;
                } // end else
             } // end if
          } // end for
          
          for ( int i_extra_lep = 0; i_extra_lep < nExtraLep; i_extra_lep++ )
          {
-            if ( Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_H_lep), gen_H_lep_phi_.at(i_gen_H_lep), ExtraLepEta->at(i_extra_lep), ExtraLepPhi->at(i_extra_lep)) < 0.1 )
+            delta_R_ = Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_H_lep), gen_H_lep_phi_.at(i_gen_H_lep),
+                                         ExtraLepEta->at(i_extra_lep), ExtraLepPhi->at(i_extra_lep));
+            if ( delta_R_ < 0.1 )
             {
-               n_reco_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
-               n_gen_lep_matched_to_reco_lep[4 + i_extra_lep]++;
+               counter_map["n_reco_lep_matched_to_gen_H_lep"][i_gen_H_lep]++;
+               counter_map["n_gen_lep_matched_to_reco_lep"][4 + i_extra_lep]++;
+
+//               n_reco_lep_matched_to_gen_H_lep[i_gen_H_lep]++;
+//               n_gen_lep_matched_to_reco_lep[4 + i_extra_lep]++;
             } // end if
          } // end for
       } // end if
@@ -775,7 +786,9 @@ void Categorisation::DoLeptonMatching()
       {
          for ( int i_cand_lep = 0; i_cand_lep < 4; i_cand_lep++ )
          {
-            if ( Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_assoc_lep), gen_H_lep_phi_.at(i_gen_assoc_lep), LepEta->at(i_cand_lep), LepPhi->at(i_cand_lep)) < 0.1 )
+            delta_R_ = Utilities::DeltaR(gen_H_lep_eta_.at(i_gen_assoc_lep), gen_H_lep_phi_.at(i_gen_assoc_lep),
+                                         LepEta->at(i_cand_lep), LepPhi->at(i_cand_lep));
+            if ( delta_R_ < 0.1 )
             {
                n_reco_lep_matched_to_gen_assoc_lep[i_gen_assoc_lep]++;
                n_cand_lep_matched_to_gen_assoc_lep[i_gen_assoc_lep]++;
@@ -786,7 +799,9 @@ void Categorisation::DoLeptonMatching()
          
          for ( int i_extra_lep = 0; i_extra_lep < nExtraLep; i_extra_lep++ )
          {
-            if ( Utilities::DeltaR(gen_assoc_lep_eta_.at(i_gen_assoc_lep), gen_assoc_lep_phi_.at(i_gen_assoc_lep), ExtraLepEta->at(i_extra_lep), ExtraLepPhi->at(i_extra_lep)) < 0.1 )
+            delta_R_ = Utilities::DeltaR(gen_assoc_lep_eta_.at(i_gen_assoc_lep), gen_assoc_lep_phi_.at(i_gen_assoc_lep),
+                                         ExtraLepEta->at(i_extra_lep), ExtraLepPhi->at(i_extra_lep));
+            if ( delta_R_ < 0.1 )
             {
                n_reco_lep_matched_to_gen_assoc_lep[i_gen_assoc_lep]++;
                n_gen_lep_matched_to_reco_lep[4 + i_extra_lep]++;
@@ -796,6 +811,133 @@ void Categorisation::DoLeptonMatching()
    } // end for
 }
 //=====================================
+
+
+//====================================
+void Categorisation::UseMatchingInfo()
+{
+
+// Bool_t foundMatchingAmbiguity = false;
+//      for(Int_t iGenHLep=0; iGenHLep<4; iGenHLep++) if(nRecoLepMatchedToGenHLep[iGenHLep]>1){ foundMatchingAmbiguity = true; break; }
+//      for(Int_t iGenAssocLep=0; iGenAssocLep<2; iGenAssocLep++) if(nRecoLepMatchedToGenAssocLep[iGenAssocLep]>1){ foundMatchingAmbiguity = true; break; }
+//      for(Int_t iRecoLep=0; iRecoLep<4+nExtraLep; iRecoLep++) if(nGenLepMatchedToRecoLep[iRecoLep]>1){ foundMatchingAmbiguity = true; break; }
+//
+//      Int_t nOnes = 0;
+//      for(Int_t iGenHLep=0; iGenHLep<4; iGenHLep++) if(nRecoLepMatchedToGenHLep[iGenHLep]==1) nOnes++;
+//
+//      Int_t nOnesHLeps = 0;
+//      for(Int_t iGenHLep=0; iGenHLep<4; iGenHLep++) if(nCandLepMatchedToGenHLep[iGenHLep]==1) nOnesHLeps++;
+//      Int_t nOnesAssocLeps = 0;
+//      for(Int_t iGenAssocLep=0; iGenAssocLep<2; iGenAssocLep++) if(nCandLepMatchedToGenAssocLep[iGenAssocLep]==1) nOnesAssocLeps++;
+//      Int_t currentMatchHLepsStatus = -1;
+//      if(foundMatchingAmbiguity){
+//   currentMatchHLepsStatus = 5;
+//      }else{
+//   if(nOnesHLeps==4) currentMatchHLepsStatus = 0;
+//   if(nOnesHLeps==3) currentMatchHLepsStatus = 1;
+//   if(nOnesHLeps==2) currentMatchHLepsStatus = 2;
+//   if(nOnesHLeps==1) currentMatchHLepsStatus = 3;
+//   if(nOnesHLeps==0) currentMatchHLepsStatus = 4;
+//      }
+//      Int_t currentMatchAllLepsStatus = -1;
+//      if(foundMatchingAmbiguity){
+//   currentMatchAllLepsStatus = 4;
+//      }else{
+//   if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchAllLepsStatus = 0;
+//   if(nOnesHLeps==3 && nOnesAssocLeps==1) currentMatchAllLepsStatus = 1;
+//   if(nOnesHLeps==2 && nOnesAssocLeps==2) currentMatchAllLepsStatus = 2;
+//   if(nOnesHLeps+nOnesAssocLeps<4) currentMatchAllLepsStatus = 3;
+//      }
+//      Int_t currentMatchWHStatus = -1;
+//      Int_t currentMatchZHStatus = -1;
+//      Int_t currentMatchttHStatus = -1;
+//      if(currentProcess==WH){
+//   if(foundMatchingAmbiguity){
+//     currentMatchWHStatus = 4;
+//   }else{
+//     if(nOnesHLeps+nOnesAssocLeps<4){
+//       currentMatchWHStatus = 3;
+//     }else{
+//       if(nGenHLep==4 && nGenAssocLep==0){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchWHStatus = 0;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==4 && nGenAssocLep==1){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchWHStatus = 1;
+//         else if(nOnesHLeps==3 && nOnesAssocLeps==1) currentMatchWHStatus = 2;
+//         else cout<<"error nOnes"<<endl;
+//       }else{
+//         cout<<"error nGen"<<endl;
+//       }
+//     }
+//   }
+//      }
+//      if(currentProcess==ZH){
+//   if(foundMatchingAmbiguity){
+//     currentMatchZHStatus = 6;
+//   }else{
+//     if(nOnesHLeps+nOnesAssocLeps<4){
+//       currentMatchZHStatus = 5;
+//     }else{
+//       if(nGenHLep==4 && nGenAssocLep==0){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchZHStatus = 0;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==4 && nGenAssocLep==2){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchZHStatus = 1;
+//         else if(nOnesHLeps==3 && nOnesAssocLeps==1) currentMatchZHStatus = 2;
+//         else if(nOnesHLeps==2 && nOnesAssocLeps==2) currentMatchZHStatus = 3;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==2 && nGenAssocLep==2){
+//         if(nOnesHLeps==2 && nOnesAssocLeps==2) currentMatchZHStatus = 4;
+//         else cout<<"error nOnes"<<endl;
+//       }else{
+//         cout<<"error nGen"<<endl;
+//       }
+//     }
+//   }
+//      }
+//      if(currentProcess==ttH){
+//   if(foundMatchingAmbiguity){
+//     currentMatchttHStatus = 8;
+//   }else{
+//     if(nOnesHLeps+nOnesAssocLeps<4){
+//       currentMatchttHStatus = 7;
+//     }else{
+//       if(nGenHLep==4 && nGenAssocLep==0){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchttHStatus = 0;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==4 && nGenAssocLep==1){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchttHStatus = 1;
+//         else if(nOnesHLeps==3 && nOnesAssocLeps==1) currentMatchttHStatus = 2;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==4 && nGenAssocLep==2){
+//         if(nOnesHLeps==4 && nOnesAssocLeps==0) currentMatchttHStatus = 3;
+//         else if(nOnesHLeps==3 && nOnesAssocLeps==1) currentMatchttHStatus = 4;
+//         else if(nOnesHLeps==2 && nOnesAssocLeps==2) currentMatchttHStatus = 5;
+//         else cout<<"error nOnes"<<endl;
+//       }else if(nGenHLep==2 && nGenAssocLep==2){
+//         if(nOnesHLeps==2 && nOnesAssocLeps==2) currentMatchttHStatus = 6;
+//         else cout<<"error nOnes"<<endl;
+//       }else{
+//         cout<<"error nGen"<<endl;
+//       }
+//     }
+//   }
+//      }
+//
+//      Int_t currentZ1MatchStatus = -1;
+//      if(nGenHLepMatchedToZ1Lep[0]>1 || nGenHLepMatchedToZ1Lep[1]>1) currentZ1MatchStatus = 3;
+//      else currentZ1MatchStatus = 2 - (nGenHLepMatchedToZ1Lep[0] + nGenHLepMatchedToZ1Lep[1]);
+//      Int_t currentZ2MatchStatus = -1;
+//      if(nGenHLepMatchedToZ2Lep[0]>1 || nGenHLepMatchedToZ2Lep[1]>1) currentZ2MatchStatus = 3;
+//      else currentZ2MatchStatus = 2 - (nGenHLepMatchedToZ2Lep[0] + nGenHLepMatchedToZ2Lep[1]);
+//
+
+
+
+}
+//====================================
+
+
 
 
 
@@ -832,6 +974,9 @@ void Categorisation::ResetPerEventStuff()
    n_gen_mu  = 0;
    n_gen_tau = 0;
    n_gen_LEP = 0; // including tau
+   
+   // Clean per-event maps
+   counter_map.clear();
    
    // Clean per-event vectors
    gen_H_lep_id_.clear();
