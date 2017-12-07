@@ -113,6 +113,87 @@ public:
       MAX_NUM_OF_ASSOCIATED_DECAYS
    };
 
+   enum variable
+   {
+      M4l,
+      M4l2,
+      MZ1,
+      MZ2,
+      Dkinbkg,
+      DiJetFisher,
+      Pvbf,
+      Phjj,
+      Pvbf1j,
+      Phj,
+      Pwhhadr,
+      Pzhhadr,
+      Pwhlept,
+      Pzhlept,
+      D2jVbfHjj,
+      D1jVbfHj,
+      D2jWHHadrHjj,
+      D2jZHHadrHjj,
+      Pqj1,
+      Pgj1,
+      Pqj1Pqj2,
+      Pgj1Pgj2,
+      D2jqg,
+      Dqgj1Dqgj2,
+      Pqj1VbfTopo,
+      Pgj1VbfTopo,
+      Pqj1Pqj2VbfTopo,
+      Pgj1Pgj2VbfTopo,
+      D2jqgVbfTopo,
+      Pq,
+      Pg,
+      D1jqg,
+      D2jMelaQGVbfHjj,
+      D2jMelaD2jQGVbfHjj,
+      D1jMelaQGVbfHj,
+      D1jMelaD1jQGVbfHj,
+      D2jMelaQGWHHadrHjj,
+      D2jMelaD2jQGWHHadrHjj,
+      D2jMelaQGZHHadrHjj,
+      D2jMelaD2jQGZHHadrHjj,
+      RatioPvbfPhjj,
+      RatioPqj1Pqj2Pgj1Pgj2,
+      RatioPvbfPqj1Pqj2PhjjPgj1Pgj2,
+      D2jMelaExpQGVbfHjj,
+      D2jMelaSqQGVbfHjj,
+      D2jMelaSqrtQGVbfHjj,
+      D2jMelaCbrtQGVbfHjj,
+      D2jMelaQrrtQGVbfHjj,
+      D2jMelaQnrtQGVbfHjj,
+      D1jMelaSqrtQGVbfHj,
+      D1jMelaCbrtQGVbfHj,
+      D1jMelaQrrtQGVbfHj,
+      D1jMelaQnrtQGVbfHj,
+      D2jMelaSqrtQGWHHadrHjj,
+      D2jMelaCbrtQGWHHadrHjj,
+      D2jMelaQrrtQGWHHadrHjj,
+      D2jMelaQnrtQGWHHadrHjj,
+      D2jMelaSqrtQGZHHadrHjj,
+      D2jMelaCbrtQGZHHadrHjj,
+      D2jMelaQrrtQGZHHadrHjj,
+      D2jMelaQnrtQGZHHadrHjj,
+      Pt4l,
+      NGenLep,
+      NGenLepInEtaPtAcc,
+      NGenLepNotInEtaPtAcc,
+      NGenHLepNotInEtaPtAcc,
+      NGenAssocLepNotInEtaPtAcc,
+      NGenLepMinusNGoodLep,
+      NGenLepInEtaPtAccMinusNGoodLep,
+      NExtraLep,
+      NExtraZ,
+      NJets,
+      NBtaggedJets,
+      MET,
+      MAX_NUMBER_OF_VARIABLES
+   };
+   
+   
+
 
    static const int num_of_gen_channels        = MAX_NUM_OF_GEN_CHANNELS;
    static const int num_of_reco_channels       = MAX_NUM_OF_RECO_CHANNELS;
@@ -122,6 +203,7 @@ public:
    static const int num_of_categories          = MAX_NUM_OF_CATEGORIES;
    static const int num_of_sorted_objects      = MAX_NUM_OF_SORTED_OBJECTS;
    static const int num_of_associated_decays   = MAX_NUM_OF_ASSOCIATED_DECAYS;
+   static const int num_of_variables           = MAX_NUMBER_OF_VARIABLES;
 
 };
 #endif

@@ -48,6 +48,7 @@ int main( int argc, char *argv[] )
    
    cat->SaveHistograms("Histograms.root");
 
-   
    delete cat;
+   
+   cout << "Here" << endl;
 }

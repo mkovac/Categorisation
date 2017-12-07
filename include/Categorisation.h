@@ -26,6 +26,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TColor.h"
+#include "TRandom3.h"
 
 // Include classes
 #include "Tree.h"
@@ -33,12 +34,24 @@
 #include "Histograms.h"
 #include "Utilities.h"
 #include "bitops.h"
+#include "cConstants.h"
 
 
 // BOOLS
 #define APPLY_K_FACTORS 1
 #define EXCLUDE_H2l2X 1
+#define REQUIRE_EXACTLY_4_GOOD_LEPTONS      0
+#define REQUIRE_AT_LEAST_5_GOOD_LEPTONS     0
+#define REQUIRE_EXACTLY_5_GOOD_LEPTONS      0
+#define REQUIRE_EXACTLY_6_GOOD_LEPTONS      0
+#define REQUIRE_H_LEPTONS_ARE_IN_ETA_PT_ACC 0
+#define REQUIRE_H_LEPTONS_ARE_GOOD          0
 
+// Jets
+#define CSVv2M 0.8484
+#define CSVv2L 0.5426
+#define OFFICIALQGTAGGER 1
+#define BTAGGINGSF 1 // 0 - none; 1 - central; 2 - up; 3 - down
 
 using namespace std;
 
@@ -62,6 +75,7 @@ public:
    void SaveHistograms( TString );
    void DoLeptonMatching();
    void UseMatchingInfo();
+   void FillHistograms();
    
    int FindCurrentProcess( TString );
    int FindCurrentAssocDecay();
@@ -89,6 +103,13 @@ private:
    
    bool signal_region, pass_trigger, pass_trigger_no_1E;
    
+   bool found_matching_ambiguity;
+   
+   int n_ones, n_ones_H_lep, n_ones_assoc_lep;
+   
+// Variables map
+   map<Counters::variable, pair<float, bool>> variables_map;
+   
 // Per event lepton variables
    vector<int>   gen_H_lep_id_;
    vector<float> gen_H_lep_pt_;
@@ -100,7 +121,7 @@ private:
    vector<float> gen_assoc_lep_phi_;
    
 // Lepton matching counter
-   map<TString, map<int, int>> counter_map;
+   map<TString, map<int, int>> counter_map; // move to pair???
    
    int n_reco_lep_matched_to_gen_H_lep[4]     = {0, 0, 0, 0};
    int n_cand_lep_matched_to_gen_H_lep[4]     = {0, 0, 0, 0};
@@ -149,6 +170,77 @@ private:
    bool  gen_assoc_lep_is_in_pt_acc[4];
    bool  gen_assoc_lep_is_in_eta_pt_acc[4];
    
+   
+// Cuts impacting counters/histograms
+   bool exactly_4_good_leptons_;
+   bool at_least_5_good_leptons_;
+   bool exactly_5_good_leptons_;
+   bool exactly_6_good_leptons_;
+   bool H_leptons_are_in_eta_pt_acc_;
+   bool H_leptons_are_good_;
+   
+// Jets
+   float jet_no_b_tag_;
+   float jet_b_tag_;
+   float vbf_2_jets;
+   float vbf_lost_jet;
+   
+   float qg_is_default_;
+   float qg_is_normal_;
+   float jet_p_quark_[99];
+   float jet_p_gluon_[99];
+   float jet_p_g_over_p_q_[99];
+   
+   float jet_QG_likelihood_[99];
+   
+// Probabilities and discriminants
+   float p_q_j1_p_q_j2;
+   float p_g_j1_p_g_j2;
+   
+   float D_2j_qg ;
+   float D_qg_j1_D_qg_j2;
+   
+   float p_quark;
+   float p_gluon;
+   float D_1j_qg;
+   
+   float D_2j_Mela_QG_VBF_Hjj;
+   float D_2j_Mela_D_2j_QG_VBF_Hjj;
+   
+   float D_1j_Mela_QG_VBF_Hj;
+   float D_1j_Mela_D_1j_QG_VBF_Hj;
+   
+   float D_2j_Mela_QG_WH_hadr_Hjj;
+   float D_2j_Mela_D_2j_QG_WH_hadr_Hjj;
+   
+   float D_2j_Mela_QG_ZH_hadr_Hjj;
+   float D_2j_Mela_D_2j_QG_ZH_hadr_Hjj;
+   
+   float D_2j_Mela_exp_QG_VBF_Hjj;
+   
+   float D_2j_Mela_sq_QG_VBF_Hjj;
+   float D_2j_Mela_sqrt_QG_VBF_Hjj;
+   float D_2j_Mela_cbrt_QG_VBF_Hjj;
+   float D_2j_Mela_qrrt_QG_VBF_Hjj;
+   float D_2j_Mela_qnrt_QG_VBF_Hjj;
+   
+   float D_1j_Mela_sqrt_QG_VBF_Hj;
+   float D_1j_Mela_cbrt_QG_VBF_Hj;
+   float D_1j_Mela_qrrt_QG_VBF_Hj;
+   float D_1j_Mela_qnrt_QG_VBF_Hj;
+   
+   float D_2j_Mela_sqrt_QG_WH_hadr_Hjj;
+   float D_2j_Mela_cbrt_QG_WH_hadr_Hjj ;
+   float D_2j_Mela_qrrt_QG_WH_hadr_Hjj;
+   float D_2j_Mela_qnrt_QG_WH_hadr_Hjj;
+   
+   float D_2j_Mela_sqrt_QG_ZH_hadr_Hjj;
+   float D_2j_Mela_cbrt_QG_ZH_hadr_Hjj;
+   float D_2j_Mela_qrrt_QG_ZH_hadr_Hjj;
+   float D_2j_Mela_qnrt_QG_ZH_hadr_Hjj;
+   
+   
+   
 // Control counters
    int num_stored[Counters::num_of_processes][Counters::num_of_gen_channels];
    int tot_n_gen_H_lep_in_eta_acc[Counters::num_of_processes][Counters::num_of_gen_channels];
@@ -183,6 +275,17 @@ private:
    float yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
    float yield_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
    float yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
+   
+// Counters
+   int tot_n_bc_in_sig_reg_exactly_4_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_at_least_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_exactly_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_exactly_6_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_H_leps_are_good[Counters::num_of_processes][Counters::num_of_reco_channels];
+
+
+
    
 // Reconstructed counters
    int num_of_events_with_bc[Counters::num_of_processes][Counters::num_of_reco_channels];

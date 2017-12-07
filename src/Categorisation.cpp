@@ -11,6 +11,13 @@ Categorisation::Categorisation( float lumi ):Tree()
    current_category_    = -999;
    k_factor_ = 1;
    
+   // Jets
+   jet_b_tag_    = 0;
+   jet_no_b_tag_ = 0;
+   vbf_2_jets    = 0;
+   vbf_lost_jet  = 0;
+
+   
    m4l_min_ = 118.;
    m4l_max_ = 130.;
    
@@ -22,10 +29,11 @@ Categorisation::Categorisation( float lumi ):Tree()
    
    histograms = new Histograms(lumi_);
    
-   signal_region = ZZsel >= 90;
+   signal_region = (ZZsel >= 90);
    pass_trigger = test_bit_16(trigWord, 0);
    pass_trigger_no_1E = test_bit_16(trigWord, 8);
    
+
 }
 //============================================================
 
@@ -56,7 +64,7 @@ void Categorisation::MakeHistograms( TString input_file_name )
    // Find current process
    current_process_ = FindCurrentProcess(input_file_name);
    
-   if (fChain == 0) return;
+   if ( fChain == 0 ) return;
 
    Long64_t nentries = fChain->GetEntriesFast();
 
@@ -117,7 +125,22 @@ void Categorisation::MakeHistograms( TString input_file_name )
       // Match
       DoLeptonMatching();
       
-      
+      // Cuts impacting counters and histograms
+      exactly_4_good_leptons_      = nExtraLep == 0;
+      at_least_5_good_leptons_     = nExtraLep >= 1;
+      exactly_5_good_leptons_      = nExtraLep == 1;
+      exactly_6_good_leptons_      = nExtraLep == 2;
+      H_leptons_are_in_eta_pt_acc_ = n_gen_H_lep_in_eta_pt_acc == 4;
+      H_leptons_are_good_          = !found_matching_ambiguity && n_ones == 4;
+
+      if ( REQUIRE_EXACTLY_4_GOOD_LEPTONS && !exactly_4_good_leptons_ )           continue;
+      if ( REQUIRE_AT_LEAST_5_GOOD_LEPTONS && !at_least_5_good_leptons_ )         continue;
+      if ( REQUIRE_EXACTLY_5_GOOD_LEPTONS && !exactly_5_good_leptons_ )           continue;
+      if ( REQUIRE_EXACTLY_6_GOOD_LEPTONS && !exactly_6_good_leptons_ )           continue;
+      if ( REQUIRE_H_LEPTONS_ARE_IN_ETA_PT_ACC && !H_leptons_are_in_eta_pt_acc_ ) continue;
+      if ( REQUIRE_H_LEPTONS_ARE_GOOD && !H_leptons_are_good_ )                   continue;
+
+      FillHistograms();
 
    } // end events loop
 }
@@ -827,8 +850,13 @@ void Categorisation::DoLeptonMatching()
 //====================================
 void Categorisation::UseMatchingInfo()
 {
-   bool found_matching_ambiguity = false;
-
+   found_matching_ambiguity = false;
+   
+   n_ones = 0;
+   n_ones_H_lep = 0;
+   n_ones_assoc_lep = 0;
+   
+   
    for ( int i_gen_H_lep = 0; i_gen_H_lep < 4; i_gen_H_lep++ )
    {
       if ( counter_map["n_reco_lep_matched_to_gen_H_lep"][i_gen_H_lep] > 1 )
@@ -856,10 +884,9 @@ void Categorisation::UseMatchingInfo()
       }
    }
 
-   int n_ones = 0;
-   int n_ones_H_lep = 0;
-   int n_ones_assoc_lep = 0;
-   
+
+
+
    for ( int i_gen_H_lep = 0; i_gen_H_lep < 4; i_gen_H_lep++ )
    {
       if ( counter_map["n_reco_lep_matched_to_gen_H_lep"][i_gen_H_lep] == 1 ) n_ones++;
@@ -1085,11 +1112,597 @@ void Categorisation::UseMatchingInfo()
    {
       current_Z2_match_status = 2 - (n_gen_H_lep_matched_to_Z2_lep[0] + n_gen_H_lep_matched_to_Z2_lep[1]);
    }
-
 }
 //====================================
 
 
+
+//====================================
+void Categorisation::FillHistograms()
+{
+
+   if ( exactly_4_good_leptons_ )
+   {
+      tot_n_bc_in_sig_reg_exactly_4_good_leps[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_exactly_4_good_leps[current_process_][reco_ch_2]++;
+   }
+   
+   if ( at_least_5_good_leptons_ )
+   {
+      tot_n_bc_in_sig_reg_at_least_5_good_leps[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_at_least_5_good_leps[current_process_][reco_ch_2]++;
+   }
+   
+   if ( exactly_5_good_leptons_ )
+   {
+      tot_n_bc_in_sig_reg_exactly_5_good_leps[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_exactly_5_good_leps[current_process_][reco_ch_2]++;
+   }
+   
+      if ( exactly_6_good_leptons_ )
+   {
+      tot_n_bc_in_sig_reg_exactly_6_good_leps[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_exactly_6_good_leps[current_process_][reco_ch_2]++;
+   }
+   
+   if ( H_leptons_are_in_eta_pt_acc_ )
+   {
+      tot_n_bc_in_sig_reg_in_eta_pt_acc[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_in_eta_pt_acc[current_process_][reco_ch_2]++;
+   }
+   
+   if ( H_leptons_are_good_ )
+   {
+      tot_n_bc_in_sig_reg_H_leps_are_good[current_process_][reco_ch_1]++;
+      tot_n_bc_in_sig_reg_H_leps_are_good[current_process_][reco_ch_2]++;
+   }
+   
+   
+   // Jets
+   float c_QG_unoff = 1./1000.;
+   int n_jets_B_tagged_redone = 0;
+   int n_jets_B_tagged_loose_redone = 0;
+   
+   for ( int i_jet = 0; i_jet < nCleanedJetsPt30; i_jet++ )
+   {
+      if ( JetBTagger->at(i_jet) > CSVv2M ) n_jets_B_tagged_redone++;
+      if ( JetBTagger->at(i_jet) > CSVv2L ) n_jets_B_tagged_loose_redone++;
+   
+      if ( i_jet < 2 )
+      {
+         if ( JetIsBtagged->at(i_jet) )
+         {
+            jet_b_tag_ += event_weight_;
+         }
+         else jet_no_b_tag_ += event_weight_;
+      }
+      
+      
+      jet_QG_likelihood_[i_jet] = JetQGLikelihood->at(i_jet);
+   
+      if ( JetQGLikelihood->at(i_jet) < 0. && i_jet < 2 )
+      {
+         TRandom3 rand;
+         rand.SetSeed(abs(static_cast<int>(sin(JetPhi->at(i_jet))*100000)));
+         jet_QG_likelihood_[i_jet] = rand.Uniform();
+         
+         qg_is_default_ += event_weight_;
+      }
+      else
+      {
+         qg_is_normal_ += event_weight_;
+      }
+   
+      jet_p_quark_[i_jet] = 0.; //JetPQuark->at(j);//1000000. * JetPQuark->at(j);
+      jet_p_gluon_[i_jet] = 0.; //JetPGluon->at(j);//1000. * JetPGluon->at(j);
+      jet_p_g_over_p_q_[i_jet] = OFFICIALQGTAGGER ? (1./jet_QG_likelihood_[i_jet] - 1.) : (c_QG_unoff*jet_p_gluon_[i_jet]/jet_p_quark_[i_jet]);
+   }
+   
+   
+//   Fix this line
+//   if ( !BTAGGINGSF && nCleanedJetsPt30BTagged!= n_jets_B_tagged_redone ) cout<<"ERROR : inconsistency in number of b-tagged jets"<<endl;
+   
+   if ( nCleanedJets >= 2 )
+   {
+      vbf_2_jets += event_weight_;
+   }
+   else vbf_lost_jet += event_weight_;
+   
+   float vbf_lost_jet = 0.; // Why?
+   float c_VBF_2j = getDVBF2jetsConstant(ZZMass);
+   float c_VBF_1j = getDVBF1jetConstant(ZZMass);
+   float c_WH = getDWHhConstant(ZZMass);
+   float c_ZH = getDZHhConstant(ZZMass);
+   
+   float c_WH_lept = 100000000000.;
+   float c_ZH_lept = 100000000.;
+   float p_WH_lept = p_LepWH_SIG_ghw1_1_JHUGen/c_WH_lept;
+   float p_ZH_lept = p_LepZH_SIG_ghz1_1_JHUGen/c_ZH_lept;
+   
+   float KD = 1/(1 + getDbkgkinConstant(Z1Flav*Z2Flav, ZZMass)*p_QQB_BKG_MCFM/p_GG_SIG_ghg2_1_ghz1_1_JHUGen);
+   
+   float D_2j_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal);
+   float D_1j_VBF_Hj  = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal));
+   
+   float D_2j_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal);
+   float D_2j_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal);
+   
+   
+   if ( nCleanedJets >= 2 )
+   {
+      p_q_j1_p_q_j2 = 1000*1000*jet_p_quark_[0]*jet_p_quark_[1]/(c_QG_unoff*c_QG_unoff);
+      p_g_j1_p_g_j2 = 1000*1000*jet_p_gluon_[0]*jet_p_gluon_[1];
+   
+      D_2j_qg = 1/(1 + jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
+      D_qg_j1_D_qg_j2 = 1/(1 + jet_p_g_over_p_q_[0]) * 1/(1 + jet_p_g_over_p_q_[1]);
+   
+      D_2j_Mela_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal * jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
+   
+      D_2j_Mela_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
+      D_2j_Mela_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
+
+      D_2j_Mela_exp_QG_VBF_Hjj = 1./(1.+ c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Exp(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]));
+   
+      D_2j_Mela_sq_QG_VBF_Hjj   = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],2));
+      D_2j_Mela_sqrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/2));
+      D_2j_Mela_cbrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/3));
+      D_2j_Mela_qrrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/4));
+      D_2j_Mela_qnrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/5));
+   
+      D_2j_Mela_sqrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/2));
+      D_2j_Mela_cbrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/3));
+      D_2j_Mela_qrrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/4));
+      D_2j_Mela_qnrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/5));
+   
+      D_2j_Mela_sqrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/2));
+      D_2j_Mela_cbrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/3));
+      D_2j_Mela_qrrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/4));
+      D_2j_Mela_qnrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/5));
+   }
+   else
+   {
+      p_q_j1_p_q_j2 = -2;
+      p_g_j1_p_g_j2 = -2;
+   
+      D_2j_qg = -2;
+      D_qg_j1_D_qg_j2 = -2;
+   
+      D_2j_Mela_QG_VBF_Hjj = -2;
+   
+      D_2j_Mela_QG_WH_hadr_Hjj = -2;
+      D_2j_Mela_QG_ZH_hadr_Hjj = -2;
+
+      D_2j_Mela_exp_QG_VBF_Hjj = -2;
+   
+      D_2j_Mela_sq_QG_VBF_Hjj   = -2;
+      D_2j_Mela_sqrt_QG_VBF_Hjj = -2;
+      D_2j_Mela_cbrt_QG_VBF_Hjj = -2;
+      D_2j_Mela_qrrt_QG_VBF_Hjj = -2;
+      D_2j_Mela_qnrt_QG_VBF_Hjj = -2;
+   
+      D_2j_Mela_sqrt_QG_WH_hadr_Hjj = -2;
+      D_2j_Mela_cbrt_QG_WH_hadr_Hjj = -2;
+      D_2j_Mela_qrrt_QG_WH_hadr_Hjj = -2;
+      D_2j_Mela_qnrt_QG_WH_hadr_Hjj = -2;
+   
+      D_2j_Mela_sqrt_QG_ZH_hadr_Hjj = -2;
+      D_2j_Mela_cbrt_QG_ZH_hadr_Hjj = -2;
+      D_2j_Mela_qrrt_QG_ZH_hadr_Hjj = -2;
+      D_2j_Mela_qnrt_QG_ZH_hadr_Hjj = -2;
+   }
+   
+   if ( nCleanedJets >= 1 )
+   {
+      p_quark = 1000 * jet_p_quark_[0]/c_QG_unoff;
+      p_gluon = 1000 * jet_p_gluon_[0];
+      D_1j_qg = 1/(1 + jet_p_g_over_p_q_[0]);
+      
+      D_1j_Mela_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal)*jet_p_g_over_p_q_[0]);
+   
+      D_1j_Mela_sqrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/2));
+      D_1j_Mela_cbrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/3));
+      D_1j_Mela_qrrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/4));
+      D_1j_Mela_qnrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/5));
+   }
+   else
+   {
+      p_quark = -2;
+      p_gluon = -2;
+      D_1j_qg = -2;
+      
+      D_1j_Mela_QG_VBF_Hj = -2;
+   
+      D_1j_Mela_sqrt_QG_VBF_Hj = -2;
+      D_1j_Mela_cbrt_QG_VBF_Hj = -2;
+      D_1j_Mela_qrrt_QG_VBF_Hj = -2;
+      D_1j_Mela_qnrt_QG_VBF_Hj = -2;
+   }
+   
+   D_2j_Mela_D_2j_QG_VBF_Hjj = D_2j_VBF_Hjj * D_2j_qg;
+   D_1j_Mela_D_1j_QG_VBF_Hj  = D_1j_VBF_Hj * D_1j_qg;
+   
+   D_2j_Mela_D_2j_QG_WH_hadr_Hjj = D_2j_WH_hadr_Hjj * D_2j_qg;
+   D_2j_Mela_D_2j_QG_ZH_hadr_Hjj = D_2j_ZH_hadr_Hjj * D_2j_qg;
+   
+   
+   cout << "[INFO] Filling variable map..." << endl;
+   
+   variables_map[Counters::M4l].first  = ZZMass;
+   variables_map[Counters::M4l].second = 1;
+
+   variables_map[Counters::M4l2].first  = ZZMass;
+   variables_map[Counters::M4l2].second = 1;
+   
+   variables_map[Counters::MZ1].first  = Z1Mass;
+   variables_map[Counters::MZ1].second = 1;
+   
+   variables_map[Counters::MZ2].first  = Z2Mass;
+   variables_map[Counters::MZ2].second = 1;
+   
+   variables_map[Counters::Dkinbkg].first  = KD;
+   variables_map[Counters::Dkinbkg].second = 1;
+   
+   variables_map[Counters::DiJetFisher].first = DiJetFisher;
+   variables_map[Counters::DiJetFisher].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pvbf].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_2j;
+   variables_map[Counters::Pvbf].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::Phjj].first  = p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variables_map[Counters::Phjj].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::Pvbf1j].first  = p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_1j;
+   variables_map[Counters::Pvbf1j].second = nCleanedJets == 1;
+
+   variables_map[Counters::Phj].first  = p_JQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variables_map[Counters::Phj].second = nCleanedJets == 1;
+   
+   variables_map[Counters::Pwhhadr].first  = p_HadWH_SIG_ghw1_1_JHUGen_JECNominal/c_WH;
+   variables_map[Counters::Pwhhadr].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::Pzhhadr].first  = p_HadZH_SIG_ghz1_1_JHUGen_JECNominal/c_ZH;
+   variables_map[Counters::Pzhhadr].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::Pwhlept].first  = p_WH_lept;
+   variables_map[Counters::Pwhlept].second = nExtraLep >= 1;
+
+   variables_map[Counters::Pzhlept].first  = p_ZH_lept;
+   variables_map[Counters::Pzhlept].second = nExtraZ >= 1;
+   
+   variables_map[Counters::D2jVbfHjj].first  = D_2j_VBF_Hjj;
+   variables_map[Counters::D2jVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D1jVbfHj].first  = D_1j_VBF_Hj;
+   variables_map[Counters::D1jVbfHj].second = nCleanedJets == 1;
+
+   variables_map[Counters::D2jWHHadrHjj].first  = D_2j_WH_hadr_Hjj;
+   variables_map[Counters::D2jWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jZHHadrHjj].first  = D_2j_ZH_hadr_Hjj;
+   variables_map[Counters::D2jZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pqj1].first  = p_quark;
+   variables_map[Counters::Pqj1].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pgj1].first  = p_gluon;
+   variables_map[Counters::Pgj1].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pqj1Pqj2].first  = p_q_j1_p_q_j2;
+   variables_map[Counters::Pqj1Pqj2].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pgj1Pgj2].first  = p_g_j1_p_g_j2;
+   variables_map[Counters::Pgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jqg].first  = D_2j_qg;
+   variables_map[Counters::D2jqg].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Dqgj1Dqgj2].first  = D_qg_j1_D_qg_j2;
+   variables_map[Counters::Dqgj1Dqgj2].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pqj1VbfTopo].first  = p_quark;
+   variables_map[Counters::Pqj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variables_map[Counters::Pgj1VbfTopo].first  = p_gluon;
+   variables_map[Counters::Pgj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variables_map[Counters::Pqj1Pqj2VbfTopo].first  = p_q_j1_p_q_j2;
+   variables_map[Counters::Pqj1Pqj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variables_map[Counters::Pgj1Pgj2VbfTopo].first  = p_g_j1_p_g_j2;
+   variables_map[Counters::Pgj1Pgj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variables_map[Counters::D2jqgVbfTopo].first  = D_2j_qg;
+   variables_map[Counters::D2jqgVbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variables_map[Counters::Pq].first  = p_quark;
+   variables_map[Counters::Pq].second = (nCleanedJets == 1);
+
+   variables_map[Counters::Pg].first  = p_gluon;
+   variables_map[Counters::Pg].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D1jqg].first  = D_1j_qg;
+   variables_map[Counters::D1jqg].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D2jMelaQGVbfHjj].first  = D_2j_Mela_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaQGVbfHjj].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::D2jMelaD2jQGVbfHjj].first  = D_2j_Mela_D_2j_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaD2jQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D1jMelaQGVbfHj].first  = D_1j_Mela_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaQGVbfHj].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D1jMelaD1jQGVbfHj].first  = D_1j_Mela_D_1j_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaD1jQGVbfHj].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D2jMelaQGWHHadrHjj].first  = D_2j_Mela_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaD2jQGWHHadrHjj].first  = D_2j_Mela_D_2j_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaD2jQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQGZHHadrHjj].first  = D_2j_Mela_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaD2jQGZHHadrHjj].first  = D_2j_Mela_D_2j_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaD2jQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::RatioPvbfPhjj].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variables_map[Counters::RatioPvbfPhjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].first  = jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
+   variables_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
+   variables_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaExpQGVbfHjj].first  = D_2j_Mela_exp_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaExpQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaSqQGVbfHjj].first  = D_2j_Mela_sq_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaSqQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaSqrtQGVbfHjj].first  = D_2j_Mela_sqrt_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaSqrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaCbrtQGVbfHjj].first  = D_2j_Mela_cbrt_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaCbrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQrrtQGVbfHjj].first  = D_2j_Mela_qrrt_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaQrrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQnrtQGVbfHjj].first  = D_2j_Mela_qnrt_QG_VBF_Hjj;
+   variables_map[Counters::D2jMelaQnrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D1jMelaSqrtQGVbfHj].first  = D_1j_Mela_sqrt_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaSqrtQGVbfHj].second = (nCleanedJets == 1);
+   
+   variables_map[Counters::D1jMelaCbrtQGVbfHj].first  = D_1j_Mela_cbrt_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaCbrtQGVbfHj].second = (nCleanedJets == 1);
+   
+   variables_map[Counters::D1jMelaQrrtQGVbfHj].first  = D_1j_Mela_qrrt_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaQrrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D1jMelaQnrtQGVbfHj].first  = D_1j_Mela_qnrt_QG_VBF_Hj;
+   variables_map[Counters::D1jMelaQnrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variables_map[Counters::D2jMelaSqrtQGWHHadrHjj].first  = D_2j_Mela_sqrt_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaSqrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaCbrtQGWHHadrHjj].first  = D_2j_Mela_cbrt_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaCbrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQrrtQGWHHadrHjj].first  = D_2j_Mela_qrrt_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQrrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQnrtQGWHHadrHjj].first  = D_2j_Mela_qnrt_QG_WH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQnrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+   
+   variables_map[Counters::D2jMelaSqrtQGZHHadrHjj].first  = D_2j_Mela_sqrt_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaSqrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaCbrtQGZHHadrHjj].first  = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaCbrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQrrtQGZHHadrHjj].first  = D_2j_Mela_qrrt_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQrrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::D2jMelaQnrtQGZHHadrHjj].first  = D_2j_Mela_qnrt_QG_ZH_hadr_Hjj;
+   variables_map[Counters::D2jMelaQnrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variables_map[Counters::Pt4l].first  = ZZPt;
+   variables_map[Counters::Pt4l].second = 1;
+
+   variables_map[Counters::NGenLep].first  = (float)n_gen_lep;
+   variables_map[Counters::NGenLep].second = 1;
+
+   variables_map[Counters::NGenLepInEtaPtAcc].first  = (float)n_gen_lep_in_eta_pt_acc;
+   variables_map[Counters::NGenLepInEtaPtAcc].second = 1;
+
+   variables_map[Counters::NGenLepNotInEtaPtAcc].first  = (float)(n_gen_lep - n_gen_lep_in_eta_pt_acc);
+   variables_map[Counters::NGenLepNotInEtaPtAcc].second = 1;
+
+   variables_map[Counters::NGenHLepNotInEtaPtAcc].first  = (float)(n_gen_H_lep - n_gen_H_lep_in_eta_pt_acc);
+   variables_map[Counters::NGenHLepNotInEtaPtAcc].second = 1;
+
+   variables_map[Counters::NGenAssocLepNotInEtaPtAcc].first  = (float)(n_gen_assoc_lep - n_gen_assoc_lep_in_eta_pt_acc);
+   variables_map[Counters::NGenAssocLepNotInEtaPtAcc].second = 1;
+
+   variables_map[Counters::NGenLepMinusNGoodLep].first  = (float)(n_gen_lep - (4 + nExtraLep));
+   variables_map[Counters::NGenLepMinusNGoodLep].second = 1;
+
+   variables_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].first  = (float)(n_gen_lep_in_eta_pt_acc - (4 + nExtraLep));
+   variables_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].second = 1;
+
+   variables_map[Counters::NExtraLep].first  = (float)nExtraLep;
+   variables_map[Counters::NExtraLep].second = 1;
+
+   variables_map[Counters::NExtraZ].first  = (float)nExtraZ;
+   variables_map[Counters::NExtraZ].second = 1;
+
+   variables_map[Counters::NJets].first  = (float)nCleanedJets;
+   variables_map[Counters::NJets].second = 1;
+
+   variables_map[Counters::NBtaggedJets].first  = (float)nCleanedJetsPt30BTagged;
+   variables_map[Counters::NBtaggedJets].second = 1;
+
+   variables_map[Counters::MET].first  = PFMET;
+   variables_map[Counters::MET].second = 1;
+
+
+//   cout << Counters::Pvbf1j << " " << variables_map[Counters::Pvbf1j].first << " " << variables_map[Counters::Pvbf1j].second << endl;
+
+   for ( map<Counters::variable, pair<float, bool>>::iterator it = variables_map.begin(); it != variables_map.end(); it++ )
+   {
+      cout << it->second.second << endl;
+      if ( !it->second.second ) continue;
+      histograms->FillVariables( it->second.first, event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
+
+//      cout << it->second.first << " => " << it->second.second << endl;
+   }
+
+
+
+
+
+//      for(int v=0; v<nVariables; v++){
+//   if(!varPassCut[v]) continue;
+//   hBCInSR[v][currentProcess][rc]->Fill(varVal[v],eventWeight);
+//   hBCInSR[v][currentProcess][rc2]->Fill(varVal[v],eventWeight);
+//      }
+//
+//      Bool_t varPairPassCut[nVariables] = {
+//   1,1,nJets>=2,
+//      };
+//      for(int v2=0; v2<nVarPairs; v2++){
+//   if(!varPairPassCut[v2]) continue;
+//   h2DBCInSR[v2][currentProcess][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//   h2DBCInSR[v2][currentProcess][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//   if(!varPairRef[v2][2]) continue;
+//   h2DBCInSRDecays[v2][currentProcess][0][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//   h2DBCInSRDecays[v2][currentProcess][0][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//   if(nGenHLep==4){
+//     h2DBCInSRDecays[v2][currentProcess][1][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//     h2DBCInSRDecays[v2][currentProcess][1][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//     if(currentMatchHLepsStatus==0){
+//       h2DBCInSRDecays[v2][currentProcess][3][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//       h2DBCInSRDecays[v2][currentProcess][3][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//     }else if(currentMatchHLepsStatus<5){
+//       h2DBCInSRDecays[v2][currentProcess][4][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//       h2DBCInSRDecays[v2][currentProcess][4][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//     }
+//   }else{
+//     h2DBCInSRDecays[v2][currentProcess][2][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//     h2DBCInSRDecays[v2][currentProcess][2][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//   }
+//      }
+//
+//      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc]++;
+//      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc2]++;
+//      for(int v=0; v<nVariables; v++){
+//   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
+//   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
+//      }
+//
+//      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc]++;
+//      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc2]++;
+//      for(int v=0; v<nVariables; v++){
+//   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
+//   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
+//      }
+//   
+//      if(currentProcess==WH){
+//   nbWithBCInSRMatchWH[currentMatchWHStatus][rc]++;
+//   nbWithBCInSRMatchWH[currentMatchWHStatus][rc2]++;
+//   for(int v=0; v<nVariables; v++){
+//     hBCInSRMatchWH[v][currentMatchWHStatus][rc]->Fill(varVal[v],eventWeight);
+//     hBCInSRMatchWH[v][currentMatchWHStatus][rc2]->Fill(varVal[v],eventWeight);
+//   }
+//      }
+//      if(currentProcess==ZH){
+//   nbWithBCInSRMatchZH[currentMatchZHStatus][rc]++;
+//   nbWithBCInSRMatchZH[currentMatchZHStatus][rc2]++;
+//   for(int v=0; v<nVariables; v++){
+//     hBCInSRMatchZH[v][currentMatchZHStatus][rc]->Fill(varVal[v],eventWeight);
+//     hBCInSRMatchZH[v][currentMatchZHStatus][rc2]->Fill(varVal[v],eventWeight);
+//   }
+//      }
+//      if(currentProcess==ttH){
+//   nbWithBCInSRMatchttH[currentMatchttHStatus][rc]++;
+//   nbWithBCInSRMatchttH[currentMatchttHStatus][rc2]++;
+//   for(int v=0; v<nVariables; v++){
+//     hBCInSRMatchttH[v][currentMatchttHStatus][rc]->Fill(varVal[v],eventWeight);
+//     hBCInSRMatchttH[v][currentMatchttHStatus][rc2]->Fill(varVal[v],eventWeight);
+//   }
+//      }
+//
+//      if(currentMatchAllLepsStatus==0){
+//   nbWithBCInSRAll4LepRight[currentProcess][rc]++;
+//   nbWithBCInSRAll4LepRight[currentProcess][rc2]++;
+//      }
+//
+//      if(currentProcess==WH){
+//   Int_t currentWDecay = -1;
+//   if(nGenHLep==4 && nGenAssocLep==0) currentWDecay = 0;
+//   else if(nGenHLep==4 && nGenAssocLep==1) currentWDecay = 1;
+//   else cout<<"error"<<endl;
+//   nbTotalWH[currentWDecay]++;
+//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccWH[currentWDecay]++;
+//   if(HLepsAreGood) nbHLepsAreGoodWH[currentWDecay]++;
+//   if(currentMatchAllLepsStatus==0) nbAll4LepRightWH[currentWDecay]++;
+//   nbZ1DaughtersFromHWH[currentWDecay][currentZ1MatchStatus]++;
+//   nbZ2DaughtersFromHWH[currentWDecay][currentZ2MatchStatus]++;
+//      }
+//      if(currentProcess==ZH){
+//   Int_t currentZDecay = -1;
+//   if(nGenHLep==4 && nGenAssocLep==0) currentZDecay = 0;
+//   else if(nGenHLep==4 && nGenAssocLep==2) currentZDecay = 1;
+//   else if(nGenHLep==2 && nGenAssocLep==2) currentZDecay = 2;
+//   else cout<<"error"<<endl;
+//   nbTotalZH[currentZDecay]++;
+//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccZH[currentZDecay]++;
+//   if(HLepsAreGood) nbHLepsAreGoodZH[currentZDecay]++;
+//   if(currentMatchAllLepsStatus==0) nbAll4LepRightZH[currentZDecay]++;
+//   nbZ1DaughtersFromHZH[currentZDecay][currentZ1MatchStatus]++;
+//   nbZ2DaughtersFromHZH[currentZDecay][currentZ2MatchStatus]++;
+//      }
+//      if(currentProcess==ttH){
+//   Int_t currentttDecay = -1;
+//   if(nGenHLep==4 && nGenAssocLep==0) currentttDecay = 0;
+//   else if(nGenHLep==4 && nGenAssocLep==1) currentttDecay = 1;
+//   else if(nGenHLep==4 && nGenAssocLep==2) currentttDecay = 2;
+//   else if(nGenHLep==2 && nGenAssocLep==2) currentttDecay = 3;
+//   else cout<<"error"<<endl;
+//   nbTotalttH[currentttDecay]++;
+//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccttH[currentttDecay]++;
+//   if(HLepsAreGood) nbHLepsAreGoodttH[currentttDecay]++;
+//   if(currentMatchAllLepsStatus==0) nbAll4LepRightttH[currentttDecay]++;
+//   nbZ1DaughtersFromHttH[currentttDecay][currentZ1MatchStatus]++;
+//   nbZ2DaughtersFromHttH[currentttDecay][currentZ2MatchStatus]++;
+//      }
+//
+//      Bool_t rocPassCut[nROCs] = {
+//   nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,
+//      };
+//      for(int ro=0; ro<nROCs; ro++){
+//   if(!rocPassCut[ro]) continue;
+//   if(currentProcess==rocRef[ro][1])
+//     hRocSgnl[ro]->Fill(varVal[rocRef[ro][0]],eventWeight);
+//   else if(currentProcess==rocRef[ro][2])
+//     hRocBkgd[ro]->Fill(varVal[rocRef[ro][0]],eventWeight);
+//      }
+//      Bool_t evwPassCut[nEVWs] = {
+//   nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nExtraLep>=1,nExtraZ>=1,
+//      };
+//      for(int e=0; e<nEVWs; e++){
+//   if(!evwPassCut[e]) continue;
+//     hEvw[e][currentProcess]->Fill(varVal[evwRef[e][0]],eventWeight);
+//      }
+
+
+
+}
+//====================================
 
 
 
