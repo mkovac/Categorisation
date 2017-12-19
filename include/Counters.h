@@ -192,6 +192,14 @@ public:
       MAX_NUMBER_OF_VARIABLES
    };
    
+    enum variable_pair
+   {
+      M4l_vs_Dkinbkg,
+      MZ2_vs_Dkinbkg,
+      D2jVbfHjj_vs_D2jqg,
+      MAX_NUMBER_OF_VARIABLE_PAIRS
+   };
+   
    
 
 
@@ -204,6 +212,7 @@ public:
    static const int num_of_sorted_objects      = MAX_NUM_OF_SORTED_OBJECTS;
    static const int num_of_associated_decays   = MAX_NUM_OF_ASSOCIATED_DECAYS;
    static const int num_of_variables           = MAX_NUMBER_OF_VARIABLES;
+   static const int num_of_variable_pairs      = MAX_NUMBER_OF_VARIABLE_PAIRS;
 
 };
 #endif

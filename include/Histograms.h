@@ -65,105 +65,19 @@ public:
    void FillRecoLepN( int, float, int, int, int, int );
    
    void FillVariables( float, float, int, int, int, int );
-
-
+   void FillVariablePairs( float, float, float, int, int, int, int );
 
    void SaveHistograms( TString );
-   
-//   void FillM4lZX( float, float, int, int );
-//
-//   void FillMZ1( float, float, float, int, int, int );
-//   void FillMZ1ZX( float, float, float, int, int );
-//
-//   void FillMZ2( float, float, float, int, int, int );
-//   void FillMZ2ZX( float, float, float, int, int );
-//
-//   void FillKD( float, float, float, int, int, int );
-//   void FillKDZX( float, float, float, int, int );
-//
-//   void FillD1jet( float, float, float, int, int, int );
-//   void FillD1jetZX( float, float, float, int, int );
-//
-//   void FillD2jet( float, float, float, int, int, int );
-//   void FillD2jetZX( float, float, float, int, int );
-//
-//   void FillDWH( float, float, float, int, int, int );
-//   void FillDWHZX( float, float, float, int, int );
-//
-//   void FillDZH( float, float, float, int, int, int );
-//   void FillDZHZX( float, float, float, int, int );
-//
-//   void FillDVH( float, float, float, int, int, int );
-//   void FillDVHZX( float, float, float, int, int );
-//
-//   void FillMZ1vsMZ2( float, float, float, float, int, int, int );
-//
-//   void FillVectors( float, float, float, int, float, float, float, float, float, int, int) ;
-//   void FillDvsM4l( float, float, int, float, float, float, float, float, float, int, int, int );
-//
-//   void FillYields( float, float, int, int, int );
-//
-//   void SaveHistos( string );
-//   void SaveYieldHistos( string );
-//
-//   void DeleteHistos();
-//   void DeleteYieldsHistos();
-//
-//   void FillInclusive();
-//   void FillInclusiveYields();
-//
-//   void SmoothHistograms();
-//   void RenormalizeZX( vector<vector<float>> );
-//
-//   void GetHistos( TString );
-//   void GetYieldsHistos( TString );
-//
-//   void plot_1D_single( TString, TString, TString, int, int );
-//   void plot_1D_all_cat( TString, TString, TString );
-//   void plot_1D_all_fs( TString, TString, TString );
-//   void plot_2D_single( TString, TString, TString, int );
-//   void plot_2D_error_single( TString, TString, TString, int );
-//   void plot_2D_error_all_cat( TString , TString , TString );
-//
-//   void FillYieldGraphs( float, float );
-//   void PrepareYamlFiles( TString , float , float, vector<vector<float>> );
-//   void PrintYields( vector<vector<float>> );
-//   void PrintYields( float, float, vector<vector<float>> );
-//   void PrintLatexTables( float, float, vector<vector<float>> );
-//   void setColZGradient_OneColor( int , bool );
-//   void MakeZXShape( vector<vector<float>>, int );
-//   void DrawLogX( TCanvas *, int, int );
-//   void MakeCOLZGrey( bool );
-//   void SavePlots( TCanvas *, TString );
-//   void Rebin( THStack * );
-//   void ChangeYaxisTitle( THStack * );
-//   int SetProcess( int, int );
-//   int SetPlotName( TString );
-//   float SetMassPoint( int );
-//
-//   bool GetVarLogX( TString );
-//   bool GetVarLogY( TString );
-//
-//   TLegend *CreateLegend( string, TH1F*, TH1F*, TH1F*, TH1F*, TH1F* );
-//   TLegend *CreateLegendVBF( string, TH1F*, TH1F*, TH1F*, TH1F*, TH1F* ,TH1F* );
-//   TLegend *CreateLegendVH( string, TH1F*, TH1F*, TH1F*, TH1F*, TH1F* ,TH1F* );
-//   TLegend *CreateLegendttH( string, TH1F*, TH1F*, TH1F*, TH1F*, TH1F* ,TH1F* );
-//   TLegend *Create2DLegend( string, TH2F*, TH2F*, TH2F* );
-//   TLegend *Create2DErrorLegend( string, TGraphErrors*, TGraphErrors*, TGraphErrors* );
-//   TLegend *Create2DLegendAllCat( string, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors*, TGraphErrors* );
-//
-//   TPaveText *CreateCutText( string, TString);
-//   TPaveText *CreateCatText( string, TString);
-//
-//   TLine *CreateDashedLine( int );
    
 
 private:
       
    float lumi_;
    TString histo_name_, histo_label_;
-   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_;
+   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_pair_, s_variable_pair_axis_label_;
+   
    vector<tuple<int, float, float>> var_bins_min_max_;
+
    tuple<int, float, float> tpl_;
    
 //==============
@@ -188,6 +102,9 @@ private:
    TH1F* h_bc_in_sig_reg_match_WH_[Counters::num_of_variables][Counters::num_of_processes][Counters::num_of_reco_channels];
    TH1F* h_bc_in_sig_reg_match_ZH_[Counters::num_of_variables][Counters::num_of_processes][Counters::num_of_reco_channels];
    TH1F* h_bc_in_sig_reg_match_ttH_[Counters::num_of_variables][Counters::num_of_processes][Counters::num_of_reco_channels];
+
+   TH2F* h_bc_in_sig_reg_2D_[Counters::num_of_variable_pairs][Counters::num_of_processes][Counters::num_of_reco_channels];
+
 
 };
 #endif

@@ -1,21 +1,18 @@
 #ifndef CCONSTANTS_H
 #define CCONSTANTS_H
 
-#include "TFile.h"
-#include "TSpline.h"
-#include "TString.h"
-
+#include <TSpline.h>
+#include <TString.h>
 #include <memory>
 
 class cConstantSpline {
-public:
-   cConstantSpline(const TString& filename);
-   void initspline();
-   double eval(double ZZMass);
-private:
-   const TString filename_;
-   std::unique_ptr<TFile> f_;
-   TSpline3* spline_;
+  public:
+    cConstantSpline(const TString& filename);
+    void initspline(bool isDbkg);
+    double eval(double ZZMass, bool isDbkg);
+  private:
+    const TString filename_;
+    std::unique_ptr<TSpline3> spline_;
 };
 
 extern "C" float getDVBF2jetsConstant(float ZZMass);

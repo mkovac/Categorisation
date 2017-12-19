@@ -20,11 +20,15 @@ Histograms::Histograms( float lumi)
    s_process_.push_back("ggZZ");
    s_process_.push_back("ttbar");
    
+   
+   // Sort
    s_sort_.push_back("first");
    s_sort_.push_back("second");
    s_sort_.push_back("third");
    s_sort_.push_back("fourth");
    
+   
+   // Generated channels
    s_gen_ch_.push_back("gen_ch_4mu");
    s_gen_ch_.push_back("gen_ch_4e");
    s_gen_ch_.push_back("gen_ch_2e2mu");
@@ -37,6 +41,8 @@ Histograms::Histograms( float lumi)
    s_gen_ch_.push_back("gen_ch_2");
    s_gen_ch_.push_back("gen_ch_3");
    
+   
+   // Reconstructed channels
    s_reco_ch_.push_back("reco_ch_4mu");
    s_reco_ch_.push_back("reco_ch_4e");
    s_reco_ch_.push_back("reco_ch_2e2mu");
@@ -45,6 +51,8 @@ Histograms::Histograms( float lumi)
    s_reco_ch_.push_back("reco_ch_2_def");
    s_reco_ch_.push_back("reco_ch_3_def");
    
+   
+   // Variables
    s_variable_.push_back("M4l");
    s_variable_.push_back("M4l2");
    s_variable_.push_back("MZ1");
@@ -120,81 +128,87 @@ Histograms::Histograms( float lumi)
    s_variable_.push_back("NBtaggedJets");
    s_variable_.push_back("MET");
    
+   
+   s_variable_pair_.push_back("M4l_vs_Dkinbkg");
+   s_variable_pair_.push_back("MZ2_vs_Dkinbkg");
+   s_variable_pair_.push_back("D2jVbfHjj_vs_D2jqg");
+   
+   
    TString varLabel[74] = {
-  "m_{4#font[12]{l}} (GeV)",
-  "m_{4#font[12]{l}} (GeV)",
-  "m_{Z_{1}} (GeV)",
-  "m_{Z_{2}} (GeV)",
-  "D_{bkg}^{kin}",
-  "D^{Fisher}",
-  "P_{VBF}^{MELA}",
-  "P_{ggH+2j}^{MELA}",
-  "P_{VBF 1j}^{MELA}",
-  "P_{ggH+1j}^{MELA}",
-  "P_{WH-h}^{MELA}",
-  "P_{ZH-h}^{MELA}",
-  "P_{WH-l}^{MELA}",
-  "P_{ZH-l}^{MELA}",
-  "D_{VBF-2j}^{ME}",
-  "D_{VBF-1j}^{ME}",
-  "D_{WH-hadr.}^{ME}",
-  "D_{ZH-hadr.}^{ME}",
-  "P_{q}(j_{1})",
-  "P_{g}(j_{1})",
-  "P_{q}(j_{1})*P_{q}(j_{2})",
-  "P_{g}(j_{1})*P_{g}(j_{2})",
-  "D_{2jets}^{q/g}",
-  "D_{1jet}^{q/g}(j_{1})*D_{1jet}^{q/g}(j_{2})",
-  "P_{q}(j_{1})",
-  "P_{g}(j_{1})",
-  "P_{q}(j_{1})*P_{q}(j_{2})",
-  "P_{g}(j_{1})*P_{g}(j_{2})",
-  "D_{2jets}^{q/g}",
-  "P_{q}",
-  "P_{g}",
-  "D_{1jet}^{q/g}",
-  "D_{VBF-2j}^{ME, q/g}",
-  "D_{VBF-2j}^{ME}*D_{2jets}^{q/g}",
-  "D_{VBF-1j}^{ME, q/g}",
-  "D_{VBF-1j}^{ME}*D_{1jet}^{q/g}",
-  "D_{WH-hadr.}^{ME, q/g}",
-  "D_{WH-hadr.}^{ME}*D_{2jets}^{q/g}",
-  "D_{ZH-hadr.}^{ME, q/g}",
-  "D_{ZH-hadr.}^{ME}*D_{2jets}^{q/g}",
-  "P_{VBF}^{MELA} / P_{ggH+2j}^{MELA}",
-  "[P_{q}(j_{1})*P_{q}(j_{2})] / [P_{g}(j_{1})*P_{g}(j_{2})]",
-  "[P_{VBF}^{MELA}*P_{q}(j_{1})*P_{q}(j_{2})] / [P_{ggH+2j}^{MELA}*P_{g}(j_{1})*P_{g}(j_{2})]",
-  "D_{VBF-2j}^{ME, exp(q/g)}",
-  "D_{VBF-2j}^{ME, (q/g)^2}",
-  "D_{VBF-2j}^{ME, (q/g)^(1/2)}",
-  "D_{VBF-2j}^{ME, (q/g)^(1/3)}",
-  "D_{VBF-2j}^{ME, (q/g)^(1/4)}",
-  "D_{VBF-2j}^{ME, (q/g)^(1/5)}",
-  "D_{VBF-1j}^{ME, (q/g)^(1/2)}",
-  "D_{VBF-1j}^{ME, (q/g)^(1/3)}",
-  "D_{VBF-1j}^{ME, (q/g)^(1/4)}",
-  "D_{VBF-1j}^{ME, (q/g)^(1/5)}",
-  "D_{WH-hadr.}^{ME, (q/g)^(1/2)}",
-  "D_{WH-hadr.}^{ME, (q/g)^(1/3)}",
-  "D_{WH-hadr.}^{ME, (q/g)^(1/4)}",
-  "D_{WH-hadr.}^{ME, (q/g)^(1/5)}",
-  "D_{ZH-hadr.}^{ME, (q/g)^(1/2)}",
-  "D_{ZH-hadr.}^{ME, (q/g)^(1/3)}",
-  "D_{ZH-hadr.}^{ME, (q/g)^(1/4)}",
-  "D_{ZH-hadr.}^{ME, (q/g)^(1/5)}",
-  "p_{T}^{4l} (GeV)",
-  "# gen leptons",
-  "# gen leptons in acceptance",
-  "# gen leptons not in acceptance",
-  "# gen leptons from H not in acceptance",
-  "# gen associated leptons not in acceptance",
-  "# gen leptons - # good leptons",
-  "# gen leptons in acceptance - # good leptons",
-  "number of additional leptons",//"# extra leptons",
-  "number of additional #font[12]{l}^{+}#font[12]{l}^{-} pairs",//"# extra #font[12]{l}^{+}#font[12]{l}^{-} pairs",
-  "number of selected jets",//"# jets",
-  "number of selected b-tagged jets",//"# b-tagged jets",
-  "E_{T}^{miss.}",
+      "m_{4#font[12]{l}} (GeV)",
+      "m_{4#font[12]{l}} (GeV)",
+      "m_{Z_{1}} (GeV)",
+      "m_{Z_{2}} (GeV)",
+      "D_{bkg}^{kin}",
+      "D^{Fisher}",
+      "P_{VBF}^{MELA}",
+      "P_{ggH+2j}^{MELA}",
+      "P_{VBF 1j}^{MELA}",
+      "P_{ggH+1j}^{MELA}",
+      "P_{WH-h}^{MELA}",
+      "P_{ZH-h}^{MELA}",
+      "P_{WH-l}^{MELA}",
+      "P_{ZH-l}^{MELA}",
+      "D_{VBF-2j}^{ME}",
+      "D_{VBF-1j}^{ME}",
+      "D_{WH-hadr.}^{ME}",
+      "D_{ZH-hadr.}^{ME}",
+      "P_{q}(j_{1})",
+      "P_{g}(j_{1})",
+      "P_{q}(j_{1})*P_{q}(j_{2})",
+      "P_{g}(j_{1})*P_{g}(j_{2})",
+      "D_{2jets}^{q/g}",
+      "D_{1jet}^{q/g}(j_{1})*D_{1jet}^{q/g}(j_{2})",
+      "P_{q}(j_{1})",
+      "P_{g}(j_{1})",
+      "P_{q}(j_{1})*P_{q}(j_{2})",
+      "P_{g}(j_{1})*P_{g}(j_{2})",
+      "D_{2jets}^{q/g}",
+      "P_{q}",
+      "P_{g}",
+      "D_{1jet}^{q/g}",
+      "D_{VBF-2j}^{ME, q/g}",
+      "D_{VBF-2j}^{ME}*D_{2jets}^{q/g}",
+      "D_{VBF-1j}^{ME, q/g}",
+      "D_{VBF-1j}^{ME}*D_{1jet}^{q/g}",
+      "D_{WH-hadr.}^{ME, q/g}",
+      "D_{WH-hadr.}^{ME}*D_{2jets}^{q/g}",
+      "D_{ZH-hadr.}^{ME, q/g}",
+      "D_{ZH-hadr.}^{ME}*D_{2jets}^{q/g}",
+      "P_{VBF}^{MELA} / P_{ggH+2j}^{MELA}",
+      "[P_{q}(j_{1})*P_{q}(j_{2})] / [P_{g}(j_{1})*P_{g}(j_{2})]",
+      "[P_{VBF}^{MELA}*P_{q}(j_{1})*P_{q}(j_{2})] / [P_{ggH+2j}^{MELA}*P_{g}(j_{1})*P_{g}(j_{2})]",
+      "D_{VBF-2j}^{ME, exp(q/g)}",
+      "D_{VBF-2j}^{ME, (q/g)^2}",
+      "D_{VBF-2j}^{ME, (q/g)^(1/2)}",
+      "D_{VBF-2j}^{ME, (q/g)^(1/3)}",
+      "D_{VBF-2j}^{ME, (q/g)^(1/4)}",
+      "D_{VBF-2j}^{ME, (q/g)^(1/5)}",
+      "D_{VBF-1j}^{ME, (q/g)^(1/2)}",
+      "D_{VBF-1j}^{ME, (q/g)^(1/3)}",
+      "D_{VBF-1j}^{ME, (q/g)^(1/4)}",
+      "D_{VBF-1j}^{ME, (q/g)^(1/5)}",
+      "D_{WH-hadr.}^{ME, (q/g)^(1/2)}",
+      "D_{WH-hadr.}^{ME, (q/g)^(1/3)}",
+      "D_{WH-hadr.}^{ME, (q/g)^(1/4)}",
+      "D_{WH-hadr.}^{ME, (q/g)^(1/5)}",
+      "D_{ZH-hadr.}^{ME, (q/g)^(1/2)}",
+      "D_{ZH-hadr.}^{ME, (q/g)^(1/3)}",
+      "D_{ZH-hadr.}^{ME, (q/g)^(1/4)}",
+      "D_{ZH-hadr.}^{ME, (q/g)^(1/5)}",
+      "p_{T}^{4l} (GeV)",
+      "# gen leptons",
+      "# gen leptons in acceptance",
+      "# gen leptons not in acceptance",
+      "# gen leptons from H not in acceptance",
+      "# gen associated leptons not in acceptance",
+      "# gen leptons - # good leptons",
+      "# gen leptons in acceptance - # good leptons",
+      "number of additional leptons",//"# extra leptons",
+      "number of additional #font[12]{l}^{+}#font[12]{l}^{-} pairs",//"# extra #font[12]{l}^{+}#font[12]{l}^{-} pairs",
+      "number of selected jets",//"# jets",
+      "number of selected b-tagged jets",//"# b-tagged jets",
+      "E_{T}^{miss.}",
 };
 
 // Variables histos number of bins, min, and max
@@ -273,7 +287,7 @@ Histograms::Histograms( float lumi)
    get<0>(tpl_) = 6;   get<1>(tpl_) = 0;     get<2>(tpl_) = 6;    var_bins_min_max_.push_back(tpl_);
    get<0>(tpl_) = 100; get<1>(tpl_) = 0;     get<2>(tpl_) = 200;  var_bins_min_max_.push_back(tpl_);
 
-   
+
 //   _s_final_state.push_back("4e");
 //   _s_final_state.push_back("4mu");
 //   _s_final_state.push_back("2e2mu");
@@ -341,6 +355,21 @@ Histograms::Histograms( float lumi)
             h_bc_in_sig_reg_match_ttH_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
                                                               get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
          } // end i_var
+         
+         // Variable pairs histograms
+         for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
+         {
+            histo_name_ = "h_bc_in_sig_reg_2D_" + s_variable_pair_.at(i_var_pair) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+            histo_label_ = ";" + Variables::M4l_vs_Dkinbkg().x_label + ";" + Variables::M4l_vs_Dkinbkg().y_label;
+//            if ( histo_name_.Contains("ggH") ) cout << histo_name_ << endl;
+            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc] = new TH2F(histo_name_, histo_label_, Variables::M4l_vs_Dkinbkg().x_bins,
+                                                                                           Variables::M4l_vs_Dkinbkg().x_min,
+                                                                                           Variables::M4l_vs_Dkinbkg().x_max,
+                                                                                           Variables::M4l_vs_Dkinbkg().y_bins,
+                                                                                           Variables::M4l_vs_Dkinbkg().y_min,
+                                                                                           Variables::M4l_vs_Dkinbkg().y_max);
+         } // end i_var_pair
+         
       } // end i_rc
       
       
@@ -497,17 +526,34 @@ void Histograms::FillPtEtaH( float pt, float eta, float weight, int proc )
 //=================================================================================================
 void Histograms::FillVariables( float var_value, float weight, int variable, int proc, int rc_1, int rc_2 )
 {
+
+//      if ( variable == Counters::M4l ) cout << var_value << endl;
+
    h_bc_in_sig_reg_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   
    h_bc_in_sig_reg_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+
+   
+//   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//
+//   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+//   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
+//=================================================================================================
+void Histograms::FillVariablePairs( float var_value_x, float var_value_y, float weight, int var_pair, int proc, int rc_1, int rc_2 )
+{
+
+//   cout << var_value_x << "   " << var_value_y << endl;
+   h_bc_in_sig_reg_2D_[var_pair][proc][rc_1]->Fill(var_value_x, var_value_y, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_2D_[var_pair][proc][rc_2]->Fill(var_value_x, var_value_y, (proc == Counters::AllData) ? 1. : weight);
 }
 //=================================================================================================
 
@@ -539,16 +585,22 @@ void Histograms::SaveHistograms( TString file_name )
             h_bc_in_sig_reg_match_ZH_[i_var][i_proc][i_rc]->Write();
             h_bc_in_sig_reg_match_ttH_[i_var][i_proc][i_rc]->Write();
          } // end i_var
+         
+         for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
+         {
+            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc]->Write();
+         } // end i_var_pair
+         
       } // end i_rc
-   
+
       for ( int i_gc = 0; i_gc < Counters::num_of_gen_channels; i_gc++ )
       {
          h_num_reco_H_ele_in_eta_pt_acc_[i_proc][i_gc]->Write();
          h_num_reco_H_mu_in_eta_pt_acc_[i_proc][i_gc]->Write();
          h_num_reco_H_lep_in_eta_pt_acc_[i_proc][i_gc]->Write();
-         
+
 //         cout << Counters::num_of_sorted_objects << endl;
-         
+
          for ( int i_sort = 0; i_sort < Counters::num_of_sorted_objects; i_sort++ )
          {
             h_pt_gen_H_lep_in_eta_acc_[i_proc][i_gc][i_sort]->Write();

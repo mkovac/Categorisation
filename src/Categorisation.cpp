@@ -21,19 +21,8 @@ Categorisation::Categorisation( float lumi ):Tree()
    m4l_min_ = 118.;
    m4l_max_ = 130.;
    
-   gen_ch_1 = -999;
-   
-   reco_ch_1 = Counters::reco_ch_1_def;
-   reco_ch_2 = Counters::reco_ch_2_def;
-   reco_ch_3 = Counters::reco_ch_3_def;
-   
    histograms = new Histograms(lumi_);
    
-   signal_region = (ZZsel >= 90);
-   pass_trigger = test_bit_16(trigWord, 0);
-   pass_trigger_no_1E = test_bit_16(trigWord, 8);
-   
-
 }
 //============================================================
 
@@ -51,15 +40,14 @@ Categorisation::~Categorisation()
 //=============================================================
 void Categorisation::MakeHistograms( TString input_file_name )
 {
-
-   p_input_file = TFile::Open(input_file_name);
+   input_file_ = TFile::Open(input_file_name);
    
-   p_hist_counters = (TH1F*)p_input_file->Get("ZZTree/Counters");
-   num_gen_events_ = (double)p_hist_counters->GetBinContent(1);
-   gen_sum_weights_ = (double)p_hist_counters->GetBinContent(40);
+   hist_counters_ = (TH1F*)input_file_->Get("ZZTree/Counters");
+   num_gen_events_ = (double)hist_counters_->GetBinContent(1);
+   gen_sum_weights_ = (double)hist_counters_->GetBinContent(40);
    
-   p_input_tree = (TTree*)p_input_file->Get("ZZTree/candTree");
-   Init( p_input_tree, input_file_name );
+   input_tree_ = (TTree*)input_file_->Get("ZZTree/candTree");
+   Init( input_tree_, input_file_name );
    
    // Find current process
    current_process_ = FindCurrentProcess(input_file_name);
@@ -85,27 +73,42 @@ void Categorisation::MakeHistograms( TString input_file_name )
    
       // Final event weight
       event_weight_ = (lumi_ * 1000 * xsec * k_factor_ * overallEventWeight)/gen_sum_weights_;
+      
+      // Check trigger and ZZsel
+      signal_region = (ZZsel >= 90);
+      pass_trigger = test_bit_16(trigWord, 0);
+      pass_trigger_no_1E = test_bit_16(trigWord, 8);
    
 //   cout << event_weight_ << endl;
    
-
-
+      // Fill generated leptons info into vectors
       FillIdPtEtaPhi();
+   
+      // Count and categorise generated leptons comming from H decay
       CountHiggsLep();
+      
+      // Count and categorise generated associated leptons
       CountAssocLep();
-      SumAssocAndH();
+      
+      // Sum associated and Higgs leptons
+      SumAssocAndHiggsLep();
+      
+      // Find generated channel
       FindGenChannel();
+
+      // Find reconstructed channel
       FindRecoChannel();
+
+      // Fill control counters
       FillControlCounters();
       
-      if ( EXCLUDE_H2l2X )
-      {
-         if ( n_gen_H_lep != 4 && IsSignal() ) continue;
-      }
+//      cout << EventNumber << endl;
       
+      if ( EXCLUDE_H2l2X && (n_gen_H_lep != 4 && IsSignal()) ) continue;
+
       // Find associated decay
       current_assoc_dec_ = FindCurrentAssocDecay();
-      
+     
       
       // Successive selection steps
       num_of_events_with_bc[current_process_][reco_ch_1]++;
@@ -117,14 +120,15 @@ void Categorisation::MakeHistograms( TString input_file_name )
 
       if ( ZZMass < m4l_min_ || ZZMass > m4l_max_ ) continue;
 
-      num_of_events_with_bc_sr[current_process_][reco_ch_1]++;
-      num_of_events_with_bc_sr[current_process_][reco_ch_2]++;
-      yield_of_events_with_bc_sr[current_process_][reco_ch_1] += event_weight_;
-      yield_of_events_with_bc_sr[current_process_][reco_ch_2] += event_weight_;
-      
+      num_of_events_with_bc_in_sr[current_process_][reco_ch_1]++;
+      num_of_events_with_bc_in_sr[current_process_][reco_ch_2]++;
+      yield_of_events_with_bc_in_sr[current_process_][reco_ch_1] += event_weight_;
+      yield_of_events_with_bc_in_sr[current_process_][reco_ch_2] += event_weight_;
+
       // Match
       DoLeptonMatching();
-      
+      UseMatchingInfo();
+
       // Cuts impacting counters and histograms
       exactly_4_good_leptons_      = nExtraLep == 0;
       at_least_5_good_leptons_     = nExtraLep >= 1;
@@ -170,7 +174,6 @@ int Categorisation::FindCurrentProcess( TString input_file_name )
    if ( input_file_name.Contains("ggTo2e2mu") )      current_process = Counters::ggZZ;
    if ( input_file_name.Contains("ggTo2e2tau") )     current_process = Counters::ggZZ;
    if ( input_file_name.Contains("ggTo2mu2tau") )    current_process = Counters::ggZZ;
-   // End assign dataset to correct process
    
    return current_process;
 }
@@ -445,8 +448,8 @@ void Categorisation::CountAssocLep()
 //===================================
 
 
-//=================================
-void Categorisation::SumAssocAndH()
+//========================================
+void Categorisation::SumAssocAndHiggsLep()
 {
    n_gen_lep               = n_gen_H_lep + n_gen_assoc_lep;
    n_gen_lep_in_eta_acc    = n_gen_H_lep_in_eta_acc + n_gen_assoc_lep_in_eta_acc;
@@ -457,7 +460,7 @@ void Categorisation::SumAssocAndH()
    n_gen_tau               = n_gen_H_tau + n_gen_assoc_tau;
    n_gen_LEP               = n_gen_H_LEP + n_gen_assoc_LEP;
 }
-//=================================
+//========================================
 
 
 //===================================
@@ -465,8 +468,9 @@ void Categorisation::FindGenChannel()
 {
    int temp_gen_ch = -999;
    
-   gen_ch_2 = 9; // channels 0, 1, or 2
-   gen_ch_3 = 10; // channels 3, 4, or 5
+   gen_ch_1 = -999;
+   gen_ch_2 = 9; // 4e, 4mu, 2e2mu or 4tau, 2e2tau, 2mu2tau
+   gen_ch_3 = 10; // all channels
 
    if      ( n_gen_H_mu  == 4 )                     temp_gen_ch = Counters::gen_ch_4mu;
    else if ( n_gen_H_ele == 4 )                     temp_gen_ch = Counters::gen_ch_4e;
@@ -478,8 +482,8 @@ void Categorisation::FindGenChannel()
    
    gen_ch_1 = temp_gen_ch;
    
-   if ( 0 <= temp_gen_ch && temp_gen_ch <= 2 ) gen_ch_2 = 7;
-   if ( 3 <= temp_gen_ch && temp_gen_ch <= 5 ) gen_ch_2 = 8;
+   if ( 0 <= temp_gen_ch && temp_gen_ch <= 2 ) gen_ch_2 = 7; // 4e, 4mu, 2e2mu or 4tau, 2e2tau, 2mu2tau
+   if ( 3 <= temp_gen_ch && temp_gen_ch <= 5 ) gen_ch_2 = 8; // all channels
 }
 //===================================
 
@@ -488,20 +492,27 @@ void Categorisation::FindGenChannel()
 void Categorisation::FindRecoChannel()
 {
 
-   int n_cand_ele = -999;
-   int n_cand_mu  = -999;
+   reco_ch_1 = Counters::reco_ch_1_def; // 4e, 4mu, 2e2mu
+   reco_ch_2 = Counters::reco_ch_2_def; // 4e or 4mu or 2e2mu
+   reco_ch_3 = Counters::reco_ch_3_def; // all channels
+
+   int n_cand_ele = 0;
+   int n_cand_mu  = 0;
 
    for ( int i_cand_lep = 0; i_cand_lep < 4; i_cand_lep++ )
    {
       if ( abs(LepLepId->at(i_cand_lep)) == 11 ) n_cand_ele++;
       if ( abs(LepLepId->at(i_cand_lep)) == 13 ) n_cand_mu++;
    }
-      if      ( n_cand_ele == 0 && n_cand_mu == 4 ) reco_ch_1 = Counters::reco_ch_4mu;
-      else if ( n_cand_ele == 4 && n_cand_mu == 0 ) reco_ch_1 = Counters::reco_ch_4e;
-      else if ( n_cand_ele == 2 && n_cand_mu == 2 ) reco_ch_1 = Counters::reco_ch_2e2mu;
    
-      bool all_reco_ch = reco_ch_1 == Counters::reco_ch_4mu || reco_ch_1 == Counters::reco_ch_4e || reco_ch_1 == Counters::reco_ch_2e2mu;
-      if ( all_reco_ch ) reco_ch_2 = Counters::reco_ch_all;
+//   cout << "[TEST] " << n_cand_ele << endl;
+   
+   if      ( n_cand_ele == 0 && n_cand_mu == 4 ) reco_ch_1 = Counters::reco_ch_4mu;
+   else if ( n_cand_ele == 4 && n_cand_mu == 0 ) reco_ch_1 = Counters::reco_ch_4e;
+   else if ( n_cand_ele == 2 && n_cand_mu == 2 ) reco_ch_1 = Counters::reco_ch_2e2mu;
+   
+   bool all_reco_ch = reco_ch_1 == Counters::reco_ch_4mu || reco_ch_1 == Counters::reco_ch_4e || reco_ch_1 == Counters::reco_ch_2e2mu;
+   if ( all_reco_ch ) reco_ch_2 = Counters::reco_ch_all;
 }
 //====================================
 
@@ -519,12 +530,11 @@ void Categorisation::FillControlCounters()
 
 //   cout << n_gen_H_lep_in_eta_acc << endl;
 
-
    if ( n_gen_H_lep_in_eta_acc == 4 )
    {
-      tot_n_gen_H_lep_in_eta_acc[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_acc[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_acc[current_process_][gen_ch_3]++;
+      n_ev_gen_H_lep_in_eta_acc[current_process_][gen_ch_1]++;
+      n_ev_gen_H_lep_in_eta_acc[current_process_][gen_ch_2]++;
+      n_ev_gen_H_lep_in_eta_acc[current_process_][gen_ch_3]++;
    
       yield_gen_H_lep_in_eta_acc[current_process_][gen_ch_1] += event_weight_;
       yield_gen_H_lep_in_eta_acc[current_process_][gen_ch_2] += event_weight_;
@@ -562,81 +572,81 @@ void Categorisation::FillControlCounters()
 
    if ( n_gen_lep_in_eta_pt_acc == 4 )
    {
-      tot_n_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_3]++;
-      
+      n_ev_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_1]++;
+      n_ev_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_2]++;
+      n_ev_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_3]++;
+
       yield_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_1] += event_weight_;
       yield_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_2] += event_weight_;
       yield_gen_H_lep_in_eta_pt_acc[current_process_][gen_ch_3] += event_weight_;
-      
+
 //      cout << NRecoMu << " " << gen_ch_1 << endl;
-      
+
       histograms->FillRecoEleN(NRecoEle, event_weight_, current_process_, gen_ch_1, gen_ch_2, gen_ch_3);
       histograms->FillRecoMuN(NRecoMu, event_weight_, current_process_, gen_ch_1, gen_ch_2, gen_ch_3);
       histograms->FillRecoLepN(NRecoMu + NRecoEle, event_weight_, current_process_, gen_ch_1, gen_ch_2, gen_ch_3);
    }
-   
-   if ( n_gen_lep >= 4 )
-   {
-      tot_n_gen_lep[current_process_][gen_ch_1]++;
-      tot_n_gen_lep[current_process_][gen_ch_2]++;
-      tot_n_gen_lep[current_process_][gen_ch_3]++;
 
-      yield_gen_lep[current_process_][gen_ch_1] += event_weight_;
-      yield_gen_lep[current_process_][gen_ch_2] += event_weight_;
-      yield_gen_lep[current_process_][gen_ch_3] += event_weight_;
+   if ( n_gen_lep >= 4 ) // H + associated
+   {
+      n_ev_4_or_more_gen_lep[current_process_][gen_ch_1]++;
+      n_ev_4_or_more_gen_lep[current_process_][gen_ch_2]++;
+      n_ev_4_or_more_gen_lep[current_process_][gen_ch_3]++;
+
+      yield_4_or_more_gen_lep[current_process_][gen_ch_1] += event_weight_;
+      yield_4_or_more_gen_lep[current_process_][gen_ch_2] += event_weight_;
+      yield_4_or_more_gen_lep[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( NRecoMu + NRecoEle >= 4 )
    {
-      tot_n_reco_lep[current_process_][gen_ch_1]++;
-      tot_n_reco_lep[current_process_][gen_ch_2]++;
-      tot_n_reco_lep[current_process_][gen_ch_3]++;
+      n_ev_4_or_more_reco_lep[current_process_][gen_ch_1]++;
+      n_ev_4_or_more_reco_lep[current_process_][gen_ch_2]++;
+      n_ev_4_or_more_reco_lep[current_process_][gen_ch_3]++;
 
-      yield_reco_lep[current_process_][gen_ch_1] += event_weight_;
-      yield_reco_lep[current_process_][gen_ch_2] += event_weight_;
-      yield_reco_lep[current_process_][gen_ch_3] += event_weight_;
+      yield_4_or_more_reco_lep[current_process_][gen_ch_1] += event_weight_;
+      yield_4_or_more_reco_lep[current_process_][gen_ch_2] += event_weight_;
+      yield_4_or_more_reco_lep[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( signal_region )
    {
-      tot_n_bc_in_sig_reg[current_process_][gen_ch_1]++;
-      tot_n_bc_in_sig_reg[current_process_][gen_ch_2]++;
-      tot_n_bc_in_sig_reg[current_process_][gen_ch_3]++;
+      n_ev_bc_in_sig_reg[current_process_][gen_ch_1]++;
+      n_ev_bc_in_sig_reg[current_process_][gen_ch_2]++;
+      n_ev_bc_in_sig_reg[current_process_][gen_ch_3]++;
 
       yield_bc_in_sig_reg[current_process_][gen_ch_1] += event_weight_;
       yield_bc_in_sig_reg[current_process_][gen_ch_2] += event_weight_;
       yield_bc_in_sig_reg[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( pass_trigger )
    {
-      tot_n_pass_triger[current_process_][gen_ch_1]++;
-      tot_n_pass_triger[current_process_][gen_ch_2]++;
-      tot_n_pass_triger[current_process_][gen_ch_3]++;
+      n_ev_pass_triger[current_process_][gen_ch_1]++;
+      n_ev_pass_triger[current_process_][gen_ch_2]++;
+      n_ev_pass_triger[current_process_][gen_ch_3]++;
 
       yield_pass_trigger[current_process_][gen_ch_1] += event_weight_;
       yield_pass_trigger[current_process_][gen_ch_2] += event_weight_;
       yield_pass_trigger[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( pass_trigger_no_1E )
    {
-      tot_n_pass_triger_no_1E[current_process_][gen_ch_1]++;
-      tot_n_pass_triger_no_1E[current_process_][gen_ch_2]++;
-      tot_n_pass_triger_no_1E[current_process_][gen_ch_3]++;
+      n_ev_pass_triger_no_1E[current_process_][gen_ch_1]++;
+      n_ev_pass_triger_no_1E[current_process_][gen_ch_2]++;
+      n_ev_pass_triger_no_1E[current_process_][gen_ch_3]++;
 
       yield_pass_triger_no_1E[current_process_][gen_ch_1] += event_weight_;
       yield_pass_triger_no_1E[current_process_][gen_ch_2] += event_weight_;
       yield_pass_triger_no_1E[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( signal_region && pass_trigger )
    {
-      tot_n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_1]++;
-      tot_n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_2]++;
-      tot_n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_3]++;
+      n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_1]++;
+      n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_2]++;
+      n_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_3]++;
 
       yield_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_1] += event_weight_;
       yield_bc_in_sig_reg_and_pass_triger[current_process_][gen_ch_2] += event_weight_;
@@ -644,79 +654,78 @@ void Categorisation::FillControlCounters()
    
       sorted_cand_lep_pt_ = *LepPt;
       sort(sorted_cand_lep_pt_.begin(), sorted_cand_lep_pt_.end(), std::greater<>());
-      
+
       for ( int i_sort = 0; i_sort < 4; i_sort++ )
       {
-//         cout << sorted_cand_lep_pt_.at(i_sort) << endl;
          histograms->FillPtReco(sorted_cand_lep_pt_.at(i_sort), event_weight_, current_process_, gen_ch_1, gen_ch_2, gen_ch_3, i_sort);
       }
+
 
       for ( vector<float>::iterator it = LepEta->begin(); it != LepEta->end(); it++ )
       {
          sorted_cand_lep_abs_eta_.push_back(abs(*it));
       } // end for
-      
+
       sort(sorted_cand_lep_abs_eta_.begin(), sorted_cand_lep_abs_eta_.end(), std::greater<>());
 
       for ( int i_sort = 0; i_sort < 4; i_sort++ )
       {
-//         cout << sorted_cand_lep_abs_eta_.at(i_sort) << endl;
          histograms->FillAbsEtaReco(sorted_cand_lep_abs_eta_.at(i_sort), event_weight_, current_process_, gen_ch_1, gen_ch_2, gen_ch_3, i_sort);
       } // end for
-   
+
    } // end if
 
 
    if ( signal_region && pass_trigger_no_1E )
    {
-      tot_n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_1]++;
-      tot_n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_2]++;
-      tot_n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_3]++;
+      n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_1]++;
+      n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_2]++;
+      n_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_3]++;
 
       yield_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_1] += event_weight_;
       yield_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_2] += event_weight_;
       yield_bc_in_sig_reg_and_pass_triger_no_1E[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && (NRecoMu + NRecoEle) >= 4 )
    {
-      tot_n_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_3]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_1]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_2]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_3]++;
 
-      yield_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_1] += event_weight_;
-      yield_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_2] += event_weight_;
-      yield_gen_H_lep_in_eta_pt_acc_and_4_reco_lep[current_process_][gen_ch_3] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_1] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_2] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && signal_region )
    {
-      tot_n_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_3]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_1]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_2]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_3]++;
 
-      yield_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_1] += event_weight_;
-      yield_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_2] += event_weight_;
-      yield_gen_H_lep_in_eta_pt_acc_and_bc_in_sig_reg[current_process_][gen_ch_3] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_1] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_2] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_and_sig_reg[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && pass_trigger )
    {
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_3]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_1]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_2]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_3]++;
 
       yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_1] += event_weight_;
       yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_2] += event_weight_;
       yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger[current_process_][gen_ch_3] += event_weight_;
    }
-   
-   
+
+
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && pass_trigger_no_1E )
    {
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_1]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_2]++;
-      tot_n_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_3]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_1]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_2]++;
+      n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_3]++;
 
       yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_1] += event_weight_;
       yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[current_process_][gen_ch_2] += event_weight_;
@@ -725,26 +734,26 @@ void Categorisation::FillControlCounters()
 
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && signal_region && pass_trigger )
    {
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_1]++;
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_2]++;
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_3]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_1]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_2]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_3]++;
 
-      yield_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_1] += event_weight_;
-      yield_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_2] += event_weight_;
-      yield_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_3] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_1] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_2] += event_weight_;
+      yield_gen_H_lep_in_eta_pt_acc_pass_trig_sig_reg[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    if ( n_gen_H_lep_in_eta_pt_acc == 4 && signal_region && pass_trigger_no_1E )
    {
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_1]++;
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_2]++;
-      tot_n_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_3]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_1]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_2]++;
+      n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_3]++;
 
       yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_1] += event_weight_;
       yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_2] += event_weight_;
       yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[current_process_][gen_ch_3] += event_weight_;
    }
-   
+
    histograms->FillPtEtaH(GenHPt, GenHRapidity, event_weight_, current_process_);
 }
 //========================================
@@ -754,6 +763,10 @@ void Categorisation::FillControlCounters()
 //=====================================
 void Categorisation::DoLeptonMatching()
 {
+
+// Cand leptons means only Higgs leptons
+// Reco leptons means cand leptons + extra leptons
+
    for ( int i_gen_H_lep = 0; i_gen_H_lep < 4; i_gen_H_lep++ )
    {
       if ( abs(gen_H_lep_id_.at(i_gen_H_lep)) == 11 || abs(gen_H_lep_id_.at(i_gen_H_lep)) == 13 )
@@ -1162,7 +1175,7 @@ void Categorisation::FillHistograms()
    float c_QG_unoff = 1./1000.;
    int n_jets_B_tagged_redone = 0;
    int n_jets_B_tagged_loose_redone = 0;
-   
+
    for ( int i_jet = 0; i_jet < nCleanedJetsPt30; i_jet++ )
    {
       if ( JetBTagger->at(i_jet) > CSVv2M ) n_jets_B_tagged_redone++;
@@ -1176,84 +1189,85 @@ void Categorisation::FillHistograms()
          }
          else jet_no_b_tag_ += event_weight_;
       }
-      
-      
+
+
       jet_QG_likelihood_[i_jet] = JetQGLikelihood->at(i_jet);
-   
+
       if ( JetQGLikelihood->at(i_jet) < 0. && i_jet < 2 )
       {
          TRandom3 rand;
          rand.SetSeed(abs(static_cast<int>(sin(JetPhi->at(i_jet))*100000)));
          jet_QG_likelihood_[i_jet] = rand.Uniform();
-         
+
          qg_is_default_ += event_weight_;
       }
       else
       {
          qg_is_normal_ += event_weight_;
       }
-   
+
       jet_p_quark_[i_jet] = 0.; //JetPQuark->at(j);//1000000. * JetPQuark->at(j);
       jet_p_gluon_[i_jet] = 0.; //JetPGluon->at(j);//1000. * JetPGluon->at(j);
       jet_p_g_over_p_q_[i_jet] = OFFICIALQGTAGGER ? (1./jet_QG_likelihood_[i_jet] - 1.) : (c_QG_unoff*jet_p_gluon_[i_jet]/jet_p_quark_[i_jet]);
    }
-   
-   
+
+
 //   Fix this line
 //   if ( !BTAGGINGSF && nCleanedJetsPt30BTagged!= n_jets_B_tagged_redone ) cout<<"ERROR : inconsistency in number of b-tagged jets"<<endl;
-   
+
    if ( nCleanedJets >= 2 )
    {
       vbf_2_jets += event_weight_;
    }
    else vbf_lost_jet += event_weight_;
-   
+
    float vbf_lost_jet = 0.; // Why?
+   
    float c_VBF_2j = getDVBF2jetsConstant(ZZMass);
    float c_VBF_1j = getDVBF1jetConstant(ZZMass);
    float c_WH = getDWHhConstant(ZZMass);
    float c_ZH = getDZHhConstant(ZZMass);
-   
+
    float c_WH_lept = 100000000000.;
    float c_ZH_lept = 100000000.;
    float p_WH_lept = p_LepWH_SIG_ghw1_1_JHUGen/c_WH_lept;
    float p_ZH_lept = p_LepZH_SIG_ghz1_1_JHUGen/c_ZH_lept;
-   
+
    float KD = 1/(1 + getDbkgkinConstant(Z1Flav*Z2Flav, ZZMass)*p_QQB_BKG_MCFM/p_GG_SIG_ghg2_1_ghz1_1_JHUGen);
-   
+
    float D_2j_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal);
    float D_1j_VBF_Hj  = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal));
-   
+
    float D_2j_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal);
    float D_2j_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal);
-   
-   
+
+
    if ( nCleanedJets >= 2 )
    {
       p_q_j1_p_q_j2 = 1000*1000*jet_p_quark_[0]*jet_p_quark_[1]/(c_QG_unoff*c_QG_unoff);
       p_g_j1_p_g_j2 = 1000*1000*jet_p_gluon_[0]*jet_p_gluon_[1];
-   
+
       D_2j_qg = 1/(1 + jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
       D_qg_j1_D_qg_j2 = 1/(1 + jet_p_g_over_p_q_[0]) * 1/(1 + jet_p_g_over_p_q_[1]);
-   
+
       D_2j_Mela_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal * jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
-   
+
       D_2j_Mela_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
       D_2j_Mela_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]);
 
       D_2j_Mela_exp_QG_VBF_Hjj = 1./(1.+ c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Exp(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1]));
-   
+
       D_2j_Mela_sq_QG_VBF_Hjj   = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],2));
       D_2j_Mela_sqrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/2));
       D_2j_Mela_cbrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/3));
       D_2j_Mela_qrrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/4));
       D_2j_Mela_qnrt_QG_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal*TMath::Power(jet_p_g_over_p_q_[0] * jet_p_g_over_p_q_[1],1/5));
-   
+
       D_2j_Mela_sqrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/2));
       D_2j_Mela_cbrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/3));
       D_2j_Mela_qrrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/4));
       D_2j_Mela_qnrt_QG_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/5));
-   
+
       D_2j_Mela_sqrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/2));
       D_2j_Mela_cbrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/3));
       D_2j_Mela_qrrt_QG_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal * TMath::Power(jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1],1/4));
@@ -1263,42 +1277,42 @@ void Categorisation::FillHistograms()
    {
       p_q_j1_p_q_j2 = -2;
       p_g_j1_p_g_j2 = -2;
-   
+
       D_2j_qg = -2;
       D_qg_j1_D_qg_j2 = -2;
-   
+
       D_2j_Mela_QG_VBF_Hjj = -2;
-   
+
       D_2j_Mela_QG_WH_hadr_Hjj = -2;
       D_2j_Mela_QG_ZH_hadr_Hjj = -2;
 
       D_2j_Mela_exp_QG_VBF_Hjj = -2;
-   
+
       D_2j_Mela_sq_QG_VBF_Hjj   = -2;
       D_2j_Mela_sqrt_QG_VBF_Hjj = -2;
       D_2j_Mela_cbrt_QG_VBF_Hjj = -2;
       D_2j_Mela_qrrt_QG_VBF_Hjj = -2;
       D_2j_Mela_qnrt_QG_VBF_Hjj = -2;
-   
+
       D_2j_Mela_sqrt_QG_WH_hadr_Hjj = -2;
       D_2j_Mela_cbrt_QG_WH_hadr_Hjj = -2;
       D_2j_Mela_qrrt_QG_WH_hadr_Hjj = -2;
       D_2j_Mela_qnrt_QG_WH_hadr_Hjj = -2;
-   
+
       D_2j_Mela_sqrt_QG_ZH_hadr_Hjj = -2;
       D_2j_Mela_cbrt_QG_ZH_hadr_Hjj = -2;
       D_2j_Mela_qrrt_QG_ZH_hadr_Hjj = -2;
       D_2j_Mela_qnrt_QG_ZH_hadr_Hjj = -2;
    }
-   
+
    if ( nCleanedJets >= 1 )
    {
       p_quark = 1000 * jet_p_quark_[0]/c_QG_unoff;
       p_gluon = 1000 * jet_p_gluon_[0];
       D_1j_qg = 1/(1 + jet_p_g_over_p_q_[0]);
-      
+
       D_1j_Mela_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal)*jet_p_g_over_p_q_[0]);
-   
+
       D_1j_Mela_sqrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/2));
       D_1j_Mela_cbrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/3));
       D_1j_Mela_qrrt_QG_VBF_Hj = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal) * TMath::Power(jet_p_g_over_p_q_[0],1/4));
@@ -1309,278 +1323,292 @@ void Categorisation::FillHistograms()
       p_quark = -2;
       p_gluon = -2;
       D_1j_qg = -2;
-      
+
       D_1j_Mela_QG_VBF_Hj = -2;
-   
+
       D_1j_Mela_sqrt_QG_VBF_Hj = -2;
       D_1j_Mela_cbrt_QG_VBF_Hj = -2;
       D_1j_Mela_qrrt_QG_VBF_Hj = -2;
       D_1j_Mela_qnrt_QG_VBF_Hj = -2;
    }
-   
+
    D_2j_Mela_D_2j_QG_VBF_Hjj = D_2j_VBF_Hjj * D_2j_qg;
    D_1j_Mela_D_1j_QG_VBF_Hj  = D_1j_VBF_Hj * D_1j_qg;
-   
+
    D_2j_Mela_D_2j_QG_WH_hadr_Hjj = D_2j_WH_hadr_Hjj * D_2j_qg;
    D_2j_Mela_D_2j_QG_ZH_hadr_Hjj = D_2j_ZH_hadr_Hjj * D_2j_qg;
+
+
+//   cout << "[INFO] Filling variable map..." << endl;
+
+   // 1D histo maps
+   variable_map[Counters::M4l].first  = ZZMass;
+   variable_map[Counters::M4l].second = 1;
+
+   variable_map[Counters::M4l2].first  = ZZMass;
+   variable_map[Counters::M4l2].second = 1;
+
+   variable_map[Counters::MZ1].first  = Z1Mass;
+   variable_map[Counters::MZ1].second = 1;
+
+   variable_map[Counters::MZ2].first  = Z2Mass;
+   variable_map[Counters::MZ2].second = 1;
+
+   variable_map[Counters::Dkinbkg].first  = KD;
+   variable_map[Counters::Dkinbkg].second = 1;
+
+   variable_map[Counters::DiJetFisher].first = DiJetFisher;
+   variable_map[Counters::DiJetFisher].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pvbf].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_2j;
+   variable_map[Counters::Pvbf].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Phjj].first  = p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variable_map[Counters::Phjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pvbf1j].first  = p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_1j;
+   variable_map[Counters::Pvbf1j].second = nCleanedJets == 1;
+
+   variable_map[Counters::Phj].first  = p_JQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variable_map[Counters::Phj].second = nCleanedJets == 1;
+
+   variable_map[Counters::Pwhhadr].first  = p_HadWH_SIG_ghw1_1_JHUGen_JECNominal/c_WH;
+   variable_map[Counters::Pwhhadr].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pzhhadr].first  = p_HadZH_SIG_ghz1_1_JHUGen_JECNominal/c_ZH;
+   variable_map[Counters::Pzhhadr].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pwhlept].first  = p_WH_lept;
+   variable_map[Counters::Pwhlept].second = nExtraLep >= 1;
+
+   variable_map[Counters::Pzhlept].first  = p_ZH_lept;
+   variable_map[Counters::Pzhlept].second = nExtraZ >= 1;
+
+   variable_map[Counters::D2jVbfHjj].first  = D_2j_VBF_Hjj;
+   variable_map[Counters::D2jVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D1jVbfHj].first  = D_1j_VBF_Hj;
+   variable_map[Counters::D1jVbfHj].second = nCleanedJets == 1;
+
+   variable_map[Counters::D2jWHHadrHjj].first  = D_2j_WH_hadr_Hjj;
+   variable_map[Counters::D2jWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jZHHadrHjj].first  = D_2j_ZH_hadr_Hjj;
+   variable_map[Counters::D2jZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pqj1].first  = p_quark;
+   variable_map[Counters::Pqj1].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pgj1].first  = p_gluon;
+   variable_map[Counters::Pgj1].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pqj1Pqj2].first  = p_q_j1_p_q_j2;
+   variable_map[Counters::Pqj1Pqj2].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pgj1Pgj2].first  = p_g_j1_p_g_j2;
+   variable_map[Counters::Pgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jqg].first  = D_2j_qg;
+   variable_map[Counters::D2jqg].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Dqgj1Dqgj2].first  = D_qg_j1_D_qg_j2;
+   variable_map[Counters::Dqgj1Dqgj2].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pqj1VbfTopo].first  = p_quark;
+   variable_map[Counters::Pqj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variable_map[Counters::Pgj1VbfTopo].first  = p_gluon;
+   variable_map[Counters::Pgj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variable_map[Counters::Pqj1Pqj2VbfTopo].first  = p_q_j1_p_q_j2;
+   variable_map[Counters::Pqj1Pqj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variable_map[Counters::Pgj1Pgj2VbfTopo].first  = p_g_j1_p_g_j2;
+   variable_map[Counters::Pgj1Pgj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variable_map[Counters::D2jqgVbfTopo].first  = D_2j_qg;
+   variable_map[Counters::D2jqgVbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+
+   variable_map[Counters::Pq].first  = p_quark;
+   variable_map[Counters::Pq].second = (nCleanedJets == 1);
+
+   variable_map[Counters::Pg].first  = p_gluon;
+   variable_map[Counters::Pg].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D1jqg].first  = D_1j_qg;
+   variable_map[Counters::D1jqg].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D2jMelaQGVbfHjj].first  = D_2j_Mela_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaD2jQGVbfHjj].first  = D_2j_Mela_D_2j_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaD2jQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D1jMelaQGVbfHj].first  = D_1j_Mela_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D1jMelaD1jQGVbfHj].first  = D_1j_Mela_D_1j_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaD1jQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D2jMelaQGWHHadrHjj].first  = D_2j_Mela_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaD2jQGWHHadrHjj].first  = D_2j_Mela_D_2j_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaD2jQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQGZHHadrHjj].first  = D_2j_Mela_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaD2jQGZHHadrHjj].first  = D_2j_Mela_D_2j_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaD2jQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::RatioPvbfPhjj].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variable_map[Counters::RatioPvbfPhjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].first  = jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
+   variable_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
+   variable_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaExpQGVbfHjj].first  = D_2j_Mela_exp_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaExpQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaSqQGVbfHjj].first  = D_2j_Mela_sq_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaSqQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaSqrtQGVbfHjj].first  = D_2j_Mela_sqrt_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaSqrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaCbrtQGVbfHjj].first  = D_2j_Mela_cbrt_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaCbrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQrrtQGVbfHjj].first  = D_2j_Mela_qrrt_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaQrrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQnrtQGVbfHjj].first  = D_2j_Mela_qnrt_QG_VBF_Hjj;
+   variable_map[Counters::D2jMelaQnrtQGVbfHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D1jMelaSqrtQGVbfHj].first  = D_1j_Mela_sqrt_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaSqrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D1jMelaCbrtQGVbfHj].first  = D_1j_Mela_cbrt_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaCbrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D1jMelaQrrtQGVbfHj].first  = D_1j_Mela_qrrt_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaQrrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D1jMelaQnrtQGVbfHj].first  = D_1j_Mela_qnrt_QG_VBF_Hj;
+   variable_map[Counters::D1jMelaQnrtQGVbfHj].second = (nCleanedJets == 1);
+
+   variable_map[Counters::D2jMelaSqrtQGWHHadrHjj].first  = D_2j_Mela_sqrt_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaSqrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaCbrtQGWHHadrHjj].first  = D_2j_Mela_cbrt_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaCbrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQrrtQGWHHadrHjj].first  = D_2j_Mela_qrrt_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQrrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQnrtQGWHHadrHjj].first  = D_2j_Mela_qnrt_QG_WH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQnrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaSqrtQGZHHadrHjj].first  = D_2j_Mela_sqrt_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaSqrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaCbrtQGZHHadrHjj].first  = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaCbrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQrrtQGZHHadrHjj].first  = D_2j_Mela_qrrt_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQrrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::D2jMelaQnrtQGZHHadrHjj].first  = D_2j_Mela_qnrt_QG_ZH_hadr_Hjj;
+   variable_map[Counters::D2jMelaQnrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+
+   variable_map[Counters::Pt4l].first  = ZZPt;
+   variable_map[Counters::Pt4l].second = 1;
+
+   variable_map[Counters::NGenLep].first  = (float)n_gen_lep;
+   variable_map[Counters::NGenLep].second = 1;
+
+   variable_map[Counters::NGenLepInEtaPtAcc].first  = (float)n_gen_lep_in_eta_pt_acc;
+   variable_map[Counters::NGenLepInEtaPtAcc].second = 1;
+
+   variable_map[Counters::NGenLepNotInEtaPtAcc].first  = (float)(n_gen_lep - n_gen_lep_in_eta_pt_acc);
+   variable_map[Counters::NGenLepNotInEtaPtAcc].second = 1;
+
+   variable_map[Counters::NGenHLepNotInEtaPtAcc].first  = (float)(n_gen_H_lep - n_gen_H_lep_in_eta_pt_acc);
+   variable_map[Counters::NGenHLepNotInEtaPtAcc].second = 1;
+
+   variable_map[Counters::NGenAssocLepNotInEtaPtAcc].first  = (float)(n_gen_assoc_lep - n_gen_assoc_lep_in_eta_pt_acc);
+   variable_map[Counters::NGenAssocLepNotInEtaPtAcc].second = 1;
+
+   variable_map[Counters::NGenLepMinusNGoodLep].first  = (float)(n_gen_lep - (4 + nExtraLep));
+   variable_map[Counters::NGenLepMinusNGoodLep].second = 1;
+
+   variable_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].first  = (float)(n_gen_lep_in_eta_pt_acc - (4 + nExtraLep));
+   variable_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].second = 1;
+
+   variable_map[Counters::NExtraLep].first  = (float)nExtraLep;
+   variable_map[Counters::NExtraLep].second = 1;
+
+   variable_map[Counters::NExtraZ].first  = (float)nExtraZ;
+   variable_map[Counters::NExtraZ].second = 1;
+
+   variable_map[Counters::NJets].first  = (float)nCleanedJets;
+   variable_map[Counters::NJets].second = 1;
+
+   variable_map[Counters::NBtaggedJets].first  = (float)nCleanedJetsPt30BTagged;
+   variable_map[Counters::NBtaggedJets].second = 1;
+
+   variable_map[Counters::MET].first  = PFMET;
+   variable_map[Counters::MET].second = 1;
    
+   // 2D histo maps
+   get<0>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = ZZMass;
+   get<1>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = KD;
+   get<2>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = 1;
    
-   cout << "[INFO] Filling variable map..." << endl;
+   get<0>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = Z2Mass;
+   get<1>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = KD;
+   get<2>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = 1;
    
-   variables_map[Counters::M4l].first  = ZZMass;
-   variables_map[Counters::M4l].second = 1;
-
-   variables_map[Counters::M4l2].first  = ZZMass;
-   variables_map[Counters::M4l2].second = 1;
-   
-   variables_map[Counters::MZ1].first  = Z1Mass;
-   variables_map[Counters::MZ1].second = 1;
-   
-   variables_map[Counters::MZ2].first  = Z2Mass;
-   variables_map[Counters::MZ2].second = 1;
-   
-   variables_map[Counters::Dkinbkg].first  = KD;
-   variables_map[Counters::Dkinbkg].second = 1;
-   
-   variables_map[Counters::DiJetFisher].first = DiJetFisher;
-   variables_map[Counters::DiJetFisher].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pvbf].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_2j;
-   variables_map[Counters::Pvbf].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::Phjj].first  = p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
-   variables_map[Counters::Phjj].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::Pvbf1j].first  = p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_1j;
-   variables_map[Counters::Pvbf1j].second = nCleanedJets == 1;
-
-   variables_map[Counters::Phj].first  = p_JQCD_SIG_ghg2_1_JHUGen_JECNominal;
-   variables_map[Counters::Phj].second = nCleanedJets == 1;
-   
-   variables_map[Counters::Pwhhadr].first  = p_HadWH_SIG_ghw1_1_JHUGen_JECNominal/c_WH;
-   variables_map[Counters::Pwhhadr].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::Pzhhadr].first  = p_HadZH_SIG_ghz1_1_JHUGen_JECNominal/c_ZH;
-   variables_map[Counters::Pzhhadr].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::Pwhlept].first  = p_WH_lept;
-   variables_map[Counters::Pwhlept].second = nExtraLep >= 1;
-
-   variables_map[Counters::Pzhlept].first  = p_ZH_lept;
-   variables_map[Counters::Pzhlept].second = nExtraZ >= 1;
-   
-   variables_map[Counters::D2jVbfHjj].first  = D_2j_VBF_Hjj;
-   variables_map[Counters::D2jVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D1jVbfHj].first  = D_1j_VBF_Hj;
-   variables_map[Counters::D1jVbfHj].second = nCleanedJets == 1;
-
-   variables_map[Counters::D2jWHHadrHjj].first  = D_2j_WH_hadr_Hjj;
-   variables_map[Counters::D2jWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jZHHadrHjj].first  = D_2j_ZH_hadr_Hjj;
-   variables_map[Counters::D2jZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pqj1].first  = p_quark;
-   variables_map[Counters::Pqj1].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pgj1].first  = p_gluon;
-   variables_map[Counters::Pgj1].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pqj1Pqj2].first  = p_q_j1_p_q_j2;
-   variables_map[Counters::Pqj1Pqj2].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pgj1Pgj2].first  = p_g_j1_p_g_j2;
-   variables_map[Counters::Pgj1Pgj2].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jqg].first  = D_2j_qg;
-   variables_map[Counters::D2jqg].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Dqgj1Dqgj2].first  = D_qg_j1_D_qg_j2;
-   variables_map[Counters::Dqgj1Dqgj2].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pqj1VbfTopo].first  = p_quark;
-   variables_map[Counters::Pqj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
-
-   variables_map[Counters::Pgj1VbfTopo].first  = p_gluon;
-   variables_map[Counters::Pgj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
-
-   variables_map[Counters::Pqj1Pqj2VbfTopo].first  = p_q_j1_p_q_j2;
-   variables_map[Counters::Pqj1Pqj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
-
-   variables_map[Counters::Pgj1Pgj2VbfTopo].first  = p_g_j1_p_g_j2;
-   variables_map[Counters::Pgj1Pgj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
-
-   variables_map[Counters::D2jqgVbfTopo].first  = D_2j_qg;
-   variables_map[Counters::D2jqgVbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
-
-   variables_map[Counters::Pq].first  = p_quark;
-   variables_map[Counters::Pq].second = (nCleanedJets == 1);
-
-   variables_map[Counters::Pg].first  = p_gluon;
-   variables_map[Counters::Pg].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D1jqg].first  = D_1j_qg;
-   variables_map[Counters::D1jqg].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D2jMelaQGVbfHjj].first  = D_2j_Mela_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaQGVbfHjj].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::D2jMelaD2jQGVbfHjj].first  = D_2j_Mela_D_2j_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaD2jQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D1jMelaQGVbfHj].first  = D_1j_Mela_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaQGVbfHj].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D1jMelaD1jQGVbfHj].first  = D_1j_Mela_D_1j_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaD1jQGVbfHj].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D2jMelaQGWHHadrHjj].first  = D_2j_Mela_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQGWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaD2jQGWHHadrHjj].first  = D_2j_Mela_D_2j_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaD2jQGWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQGZHHadrHjj].first  = D_2j_Mela_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaD2jQGZHHadrHjj].first  = D_2j_Mela_D_2j_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaD2jQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::RatioPvbfPhjj].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
-   variables_map[Counters::RatioPvbfPhjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].first  = jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
-   variables_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
-   variables_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaExpQGVbfHjj].first  = D_2j_Mela_exp_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaExpQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaSqQGVbfHjj].first  = D_2j_Mela_sq_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaSqQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaSqrtQGVbfHjj].first  = D_2j_Mela_sqrt_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaSqrtQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaCbrtQGVbfHjj].first  = D_2j_Mela_cbrt_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaCbrtQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQrrtQGVbfHjj].first  = D_2j_Mela_qrrt_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaQrrtQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQnrtQGVbfHjj].first  = D_2j_Mela_qnrt_QG_VBF_Hjj;
-   variables_map[Counters::D2jMelaQnrtQGVbfHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D1jMelaSqrtQGVbfHj].first  = D_1j_Mela_sqrt_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaSqrtQGVbfHj].second = (nCleanedJets == 1);
-   
-   variables_map[Counters::D1jMelaCbrtQGVbfHj].first  = D_1j_Mela_cbrt_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaCbrtQGVbfHj].second = (nCleanedJets == 1);
-   
-   variables_map[Counters::D1jMelaQrrtQGVbfHj].first  = D_1j_Mela_qrrt_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaQrrtQGVbfHj].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D1jMelaQnrtQGVbfHj].first  = D_1j_Mela_qnrt_QG_VBF_Hj;
-   variables_map[Counters::D1jMelaQnrtQGVbfHj].second = (nCleanedJets == 1);
-
-   variables_map[Counters::D2jMelaSqrtQGWHHadrHjj].first  = D_2j_Mela_sqrt_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaSqrtQGWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaCbrtQGWHHadrHjj].first  = D_2j_Mela_cbrt_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaCbrtQGWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQrrtQGWHHadrHjj].first  = D_2j_Mela_qrrt_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQrrtQGWHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQnrtQGWHHadrHjj].first  = D_2j_Mela_qnrt_QG_WH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQnrtQGWHHadrHjj].second = (nCleanedJets >= 2);
-   
-   variables_map[Counters::D2jMelaSqrtQGZHHadrHjj].first  = D_2j_Mela_sqrt_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaSqrtQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaCbrtQGZHHadrHjj].first  = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaCbrtQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQrrtQGZHHadrHjj].first  = D_2j_Mela_qrrt_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQrrtQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::D2jMelaQnrtQGZHHadrHjj].first  = D_2j_Mela_qnrt_QG_ZH_hadr_Hjj;
-   variables_map[Counters::D2jMelaQnrtQGZHHadrHjj].second = (nCleanedJets >= 2);
-
-   variables_map[Counters::Pt4l].first  = ZZPt;
-   variables_map[Counters::Pt4l].second = 1;
-
-   variables_map[Counters::NGenLep].first  = (float)n_gen_lep;
-   variables_map[Counters::NGenLep].second = 1;
-
-   variables_map[Counters::NGenLepInEtaPtAcc].first  = (float)n_gen_lep_in_eta_pt_acc;
-   variables_map[Counters::NGenLepInEtaPtAcc].second = 1;
-
-   variables_map[Counters::NGenLepNotInEtaPtAcc].first  = (float)(n_gen_lep - n_gen_lep_in_eta_pt_acc);
-   variables_map[Counters::NGenLepNotInEtaPtAcc].second = 1;
-
-   variables_map[Counters::NGenHLepNotInEtaPtAcc].first  = (float)(n_gen_H_lep - n_gen_H_lep_in_eta_pt_acc);
-   variables_map[Counters::NGenHLepNotInEtaPtAcc].second = 1;
-
-   variables_map[Counters::NGenAssocLepNotInEtaPtAcc].first  = (float)(n_gen_assoc_lep - n_gen_assoc_lep_in_eta_pt_acc);
-   variables_map[Counters::NGenAssocLepNotInEtaPtAcc].second = 1;
-
-   variables_map[Counters::NGenLepMinusNGoodLep].first  = (float)(n_gen_lep - (4 + nExtraLep));
-   variables_map[Counters::NGenLepMinusNGoodLep].second = 1;
-
-   variables_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].first  = (float)(n_gen_lep_in_eta_pt_acc - (4 + nExtraLep));
-   variables_map[Counters::NGenLepInEtaPtAccMinusNGoodLep].second = 1;
-
-   variables_map[Counters::NExtraLep].first  = (float)nExtraLep;
-   variables_map[Counters::NExtraLep].second = 1;
-
-   variables_map[Counters::NExtraZ].first  = (float)nExtraZ;
-   variables_map[Counters::NExtraZ].second = 1;
-
-   variables_map[Counters::NJets].first  = (float)nCleanedJets;
-   variables_map[Counters::NJets].second = 1;
-
-   variables_map[Counters::NBtaggedJets].first  = (float)nCleanedJetsPt30BTagged;
-   variables_map[Counters::NBtaggedJets].second = 1;
-
-   variables_map[Counters::MET].first  = PFMET;
-   variables_map[Counters::MET].second = 1;
+   get<0>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_VBF_Hjj;
+   get<1>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_qg;
+   get<2>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = (nCleanedJets >= 2);
 
 
-//   cout << Counters::Pvbf1j << " " << variables_map[Counters::Pvbf1j].first << " " << variables_map[Counters::Pvbf1j].second << endl;
 
-   for ( map<Counters::variable, pair<float, bool>>::iterator it = variables_map.begin(); it != variables_map.end(); it++ )
+//   cout << Counters::M4l << " " << variable_map[Counters::M4l].first << " " << variable_map[Counters::M4l].second << endl;
+
+   for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
    {
-      cout << it->second.second << endl;
       if ( !it->second.second ) continue;
       histograms->FillVariables( it->second.first, event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
+   }
 
-//      cout << it->second.first << " => " << it->second.second << endl;
+   for ( map<Counters::variable_pair, tuple<float, float, bool>>::iterator it = variable_pair_map.begin(); it != variable_pair_map.end(); it++ )
+   {
+      if ( !get<2>(it->second) ) continue;
+      histograms->FillVariablePairs( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
    }
 
 
 
 
 
-//      for(int v=0; v<nVariables; v++){
-//   if(!varPassCut[v]) continue;
-//   hBCInSR[v][currentProcess][rc]->Fill(varVal[v],eventWeight);
-//   hBCInSR[v][currentProcess][rc2]->Fill(varVal[v],eventWeight);
-//      }
-//
-//      Bool_t varPairPassCut[nVariables] = {
-//   1,1,nJets>=2,
-//      };
 //      for(int v2=0; v2<nVarPairs; v2++){
 //   if(!varPairPassCut[v2]) continue;
+//
 //   h2DBCInSR[v2][currentProcess][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //   h2DBCInSR[v2][currentProcess][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//
+//
 //   if(!varPairRef[v2][2]) continue;
+//
 //   h2DBCInSRDecays[v2][currentProcess][0][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //   h2DBCInSRDecays[v2][currentProcess][0][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
+//
 //   if(nGenHLep==4){
 //     h2DBCInSRDecays[v2][currentProcess][1][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //     h2DBCInSRDecays[v2][currentProcess][1][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
@@ -1596,9 +1624,12 @@ void Categorisation::FillHistograms()
 //     h2DBCInSRDecays[v2][currentProcess][2][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //   }
 //      }
+
+
 //
 //      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc]++;
 //      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc2]++;
+//
 //      for(int v=0; v<nVariables; v++){
 //   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
 //   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
@@ -1606,11 +1637,12 @@ void Categorisation::FillHistograms()
 //
 //      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc]++;
 //      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc2]++;
+//
 //      for(int v=0; v<nVariables; v++){
 //   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
 //   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
 //      }
-//   
+//
 //      if(currentProcess==WH){
 //   nbWithBCInSRMatchWH[currentMatchWHStatus][rc]++;
 //   nbWithBCInSRMatchWH[currentMatchWHStatus][rc2]++;
@@ -1710,35 +1742,35 @@ void Categorisation::FillHistograms()
 void Categorisation::ResetPerEventStuff()
 {
    // Clean per-event counters
-   n_gen_H_lep               = 0;
+   n_gen_H_lep               = 0; // only e and mu
    n_gen_H_lep_in_eta_acc    = 0;
    n_gen_H_lep_in_pt_acc     = 0;
    n_gen_H_lep_in_eta_pt_acc = 0;
-   n_gen_H_ele = 0;
-   n_gen_H_mu  = 0;
-   n_gen_H_tau = 0;
-   n_gen_H_LEP = 0; // including tau
+   n_gen_H_ele               = 0;
+   n_gen_H_mu                = 0;
+   n_gen_H_tau               = 0;
+   n_gen_H_LEP               = 0; // e, mu, and tau
 
-   n_gen_assoc_lep = 0;
+   n_gen_assoc_lep               = 0; // only e and mu
    n_gen_assoc_lep_in_eta_acc    = 0;
    n_gen_assoc_lep_in_pt_acc     = 0;
    n_gen_assoc_lep_in_eta_pt_acc = 0;
-   n_gen_assoc_ele = 0;
-   n_gen_assoc_mu  = 0;
-   n_gen_assoc_tau = 0;
-   n_gen_assoc_LEP = 0; // including tau
+   n_gen_assoc_ele               = 0;
+   n_gen_assoc_mu                = 0;
+   n_gen_assoc_tau               = 0;
+   n_gen_assoc_LEP               = 0; // e, mu, and tau
    
-   n_gen_LEP_plus  = 0; // including tau
-   n_gen_LEP_minus = 0; // including tau
+   n_gen_LEP_plus  = 0; // e, mu, and tau
+   n_gen_LEP_minus = 0; // e, mu, and tau
    
-   n_gen_lep = 0;
+   n_gen_lep               = 0; // only e and mu
    n_gen_lep_in_eta_acc    = 0;
    n_gen_lep_in_pt_acc     = 0;
    n_gen_lep_in_eta_pt_acc = 0;
-   n_gen_ele = 0;
-   n_gen_mu  = 0;
-   n_gen_tau = 0;
-   n_gen_LEP = 0; // including tau
+   n_gen_ele               = 0;
+   n_gen_mu                = 0;
+   n_gen_tau               = 0;
+   n_gen_LEP               = 0; // e, mu, and tau
    
    // Clean per-event maps
    counter_map.clear();
@@ -1755,6 +1787,8 @@ void Categorisation::ResetPerEventStuff()
    
    sorted_gen_H_lep_pt_.clear();
    sorted_gen_H_lep_abs_eta_.clear();
+   sorted_cand_lep_pt_.clear();
+   sorted_cand_lep_abs_eta_.clear();
 }
 //==========================================
 
