@@ -133,6 +133,13 @@ Histograms::Histograms( float lumi)
    s_variable_pair_.push_back("MZ2_vs_Dkinbkg");
    s_variable_pair_.push_back("D2jVbfHjj_vs_D2jqg");
    
+   s_variable_decay_.push_back("H_to_any");
+   s_variable_decay_.push_back("H_to_4l");
+   s_variable_decay_.push_back("H_to_2l2X");
+   s_variable_decay_.push_back("H_to_4l_4_from_H");
+   s_variable_decay_.push_back("H_to_4l_not_4_from_H");
+
+   
    
    TString varLabel[74] = {
       "m_{4#font[12]{l}} (GeV)",
@@ -309,7 +316,7 @@ Histograms::Histograms( float lumi)
 //   _s_production_mode.push_back("ZH");
 //   _s_production_mode.push_back("ttH");
    
-
+   
    for ( int i_proc = 0; i_proc < Counters::num_of_processes; i_proc++ )
    {
       histo_name_ = "h_gen_H_pt_" + s_process_.at(i_proc);
@@ -360,20 +367,30 @@ Histograms::Histograms( float lumi)
          for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
          {
             histo_name_ = "h_bc_in_sig_reg_2D_" + s_variable_pair_.at(i_var_pair) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            histo_label_ = ";" + Variables::M4l_vs_Dkinbkg().x_label + ";" + Variables::M4l_vs_Dkinbkg().y_label;
+            histo_label_ = ";" + var_pairs.vec_var_pairs[i_var_pair].x_label + ";" + var_pairs.vec_var_pairs[i_var_pair].y_label;
 //            if ( histo_name_.Contains("ggH") ) cout << histo_name_ << endl;
-            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc] = new TH2F(histo_name_, histo_label_, Variables::M4l_vs_Dkinbkg().x_bins,
-                                                                                           Variables::M4l_vs_Dkinbkg().x_min,
-                                                                                           Variables::M4l_vs_Dkinbkg().x_max,
-                                                                                           Variables::M4l_vs_Dkinbkg().y_bins,
-                                                                                           Variables::M4l_vs_Dkinbkg().y_min,
-                                                                                           Variables::M4l_vs_Dkinbkg().y_max);
+            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc] = new TH2F(histo_name_, histo_label_, var_pairs.vec_var_pairs[i_var_pair].x_bins,
+                                                                                                var_pairs.vec_var_pairs[i_var_pair].x_min,
+                                                                                                var_pairs.vec_var_pairs[i_var_pair].x_max,
+                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_bins,
+                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_min,
+                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_max);
+            
+            for ( int i_decay = 0; i_decay < 5; i_decay++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_2D_decays_" + s_variable_pair_.at(i_var_pair) + "_" +  s_process_.at(i_proc) + "_" + s_variable_decay_.at(i_decay) + "_" + s_reco_ch_.at(i_rc);
+               histo_label_ = ";" + var_pairs.vec_var_pairs[i_var_pair].x_label + ";" + var_pairs.vec_var_pairs[i_var_pair].y_label;
+//               if ( histo_name_.Contains("ggH") ) cout << histo_name_ << endl;
+               h_bc_in_sig_reg_2D_decays_[i_var_pair][i_proc][i_decay][i_rc] = new TH2F(histo_name_, histo_label_, var_pairs.vec_var_pairs[i_var_pair].x_bins,
+                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].x_min,
+                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].x_max,
+                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_bins,
+                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_min,
+                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_max);
+            } // end i_decay
          } // end i_var_pair
-         
       } // end i_rc
       
-      
-   
    
       for ( int i_gc = 0; i_gc < Counters::num_of_gen_channels; i_gc++ )
       {
@@ -559,6 +576,18 @@ void Histograms::FillVariablePairs( float var_value_x, float var_value_y, float 
 
 
 
+//=================================================================================================
+void Histograms::FillVariablePairsDecay( float var_value_x, float var_value_y, float weight, int var_pair, int proc, int decay, int rc_1, int rc_2 )
+{
+
+//   cout << var_value_x << "   " << var_value_y << endl;
+   h_bc_in_sig_reg_2D_decays_[var_pair][proc][decay][rc_1]->Fill(var_value_x, var_value_y, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_2D_decays_[var_pair][proc][decay][rc_2]->Fill(var_value_x, var_value_y, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
 //==================================================
 void Histograms::SaveHistograms( TString file_name )
 {
@@ -589,9 +618,14 @@ void Histograms::SaveHistograms( TString file_name )
          for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
          {
             h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc]->Write();
+            
+            for ( int i_decay = 0; i_decay < 5; i_decay++ )
+            {
+               h_bc_in_sig_reg_2D_decays_[i_var_pair][i_proc][i_decay][i_rc]->Write();
+            } // end i_decay
          } // end i_var_pair
-         
       } // end i_rc
+
 
       for ( int i_gc = 0; i_gc < Counters::num_of_gen_channels; i_gc++ )
       {

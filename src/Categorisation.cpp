@@ -1568,14 +1568,17 @@ void Categorisation::FillHistograms()
    get<0>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = ZZMass;
    get<1>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = KD;
    get<2>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = 1;
+   get<3>(variable_pair_map[Counters::M4l_vs_Dkinbkg]) = 1;
    
    get<0>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = Z2Mass;
    get<1>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = KD;
    get<2>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = 1;
+   get<3>(variable_pair_map[Counters::MZ2_vs_Dkinbkg]) = 1;
    
    get<0>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_VBF_Hjj;
    get<1>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_qg;
    get<2>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = (nCleanedJets >= 2);
+   get<3>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = 0;
 
 
 
@@ -1587,25 +1590,18 @@ void Categorisation::FillHistograms()
       histograms->FillVariables( it->second.first, event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
    }
 
-   for ( map<Counters::variable_pair, tuple<float, float, bool>>::iterator it = variable_pair_map.begin(); it != variable_pair_map.end(); it++ )
+   for ( map<Counters::variable_pair, tuple<float, float, bool, bool>>::iterator it = variable_pair_map.begin(); it != variable_pair_map.end(); it++ )
    {
       if ( !get<2>(it->second) ) continue;
       histograms->FillVariablePairs( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
+      
+      if ( !get<3>(it->second) ) continue;
+      histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 0, reco_ch_1, reco_ch_2 );
    }
 
 
 
 
-
-//      for(int v2=0; v2<nVarPairs; v2++){
-//   if(!varPairPassCut[v2]) continue;
-//
-//   h2DBCInSR[v2][currentProcess][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//   h2DBCInSR[v2][currentProcess][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//
-//
-//   if(!varPairRef[v2][2]) continue;
-//
 //   h2DBCInSRDecays[v2][currentProcess][0][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //   h2DBCInSRDecays[v2][currentProcess][0][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
 //

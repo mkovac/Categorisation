@@ -66,6 +66,7 @@ public:
    
    void FillVariables( float, float, int, int, int, int );
    void FillVariablePairs( float, float, float, int, int, int, int );
+   void FillVariablePairsDecay( float, float, float, int, int, int, int, int );
 
    void SaveHistograms( TString );
    
@@ -74,11 +75,13 @@ private:
       
    float lumi_;
    TString histo_name_, histo_label_;
-   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_pair_, s_variable_pair_axis_label_;
+   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_pair_, s_variable_decay_;
    
    vector<tuple<int, float, float>> var_bins_min_max_;
 
    tuple<int, float, float> tpl_;
+   
+   Variables var_pairs;
    
 //==============
 // 1D histograms
@@ -104,6 +107,7 @@ private:
    TH1F* h_bc_in_sig_reg_match_ttH_[Counters::num_of_variables][Counters::num_of_processes][Counters::num_of_reco_channels];
 
    TH2F* h_bc_in_sig_reg_2D_[Counters::num_of_variable_pairs][Counters::num_of_processes][Counters::num_of_reco_channels];
+   TH2F* h_bc_in_sig_reg_2D_decays_[Counters::num_of_variable_pairs][Counters::num_of_processes][5][Counters::num_of_reco_channels];
 
 
 };

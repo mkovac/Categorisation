@@ -109,7 +109,7 @@ private:
    
 // Variables map
    map<Counters::variable, pair<float, bool>> variable_map;
-   map<Counters::variable_pair, tuple<float, float, bool>> variable_pair_map;
+   map<Counters::variable_pair, tuple<float, float, bool, bool>> variable_pair_map;
    
 // Per event lepton variables
    vector<int>   gen_H_lep_id_;
