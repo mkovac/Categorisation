@@ -15,6 +15,7 @@ SRCPP_CATEGORISATION = run_categorisation.cpp\
                        Tree.cpp\
                        Counters.cpp\
                        Utilities.cpp\
+                       ROC.cpp\
                        CMS_lumi.cpp
 
 INCLUDES = Categorisation.h\
@@ -23,6 +24,7 @@ INCLUDES = Categorisation.h\
            Tree.h\
            Counters.h\
            Utilities.h\
+           ROC.h\
            CMS_lumi.h
 
     

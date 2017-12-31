@@ -15,7 +15,7 @@ class Variables
 {
    
 public:
-   Variables ();
+   Variables();
    ~Variables();
 
    

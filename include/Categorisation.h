@@ -35,6 +35,7 @@
 #include "Utilities.h"
 #include "bitops.h"
 #include "cConstants.h"
+#include "ROC.h"
 
 
 // BOOLS
@@ -76,6 +77,7 @@ public:
    void DoLeptonMatching();
    void UseMatchingInfo();
    void FillHistograms();
+   void MakeROCs();
    
    int FindCurrentProcess( TString );
    int FindCurrentAssocDecay();
@@ -88,6 +90,7 @@ public:
 private:
 
    Histograms *histograms;
+   ROC *roc;
 
    TFile *input_file_;
    TTree *input_tree_;
@@ -101,6 +104,20 @@ private:
    int reco_ch_1, reco_ch_2, reco_ch_3;
    int gen_ch_1, gen_ch_2, gen_ch_3;
    
+   // Matching statuses
+   int H_lep_match_status   = -999;
+   int all_lep_match_status = -999;
+   int WH_lep_match_status  = -999;
+   int ZH_lep_match_status  = -999;
+   int ttH_lep_match_status = -999;
+   int Z1_match_status      = -999;
+   int Z2_match_status      = -999;
+   
+   // Current Decay
+   int current_W_decay  = -999;
+   int current_Z_decay  = -999;
+   int current_tt_decay = -999;
+
    bool signal_region, pass_trigger, pass_trigger_no_1E;
    
    bool found_matching_ambiguity;
@@ -109,7 +126,11 @@ private:
    
 // Variables map
    map<Counters::variable, pair<float, bool>> variable_map;
-   map<Counters::variable_pair, tuple<float, float, bool, bool>> variable_pair_map;
+   map<Counters::variable_pair, tuple<float, float, bool, bool> > variable_pair_map;
+   
+// Probabilities
+ float Pvbf, Phjj;
+
    
 // Per event lepton variables
    vector<int>   gen_H_lep_id_;
@@ -249,56 +270,88 @@ private:
    
    
 // Control counters
-   int num_stored[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_gen_H_lep_in_eta_acc[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_gen_H_lep_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_or_more_gen_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_bc_in_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_pass_triger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_bc_in_sig_reg_and_pass_triger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_bc_in_sig_reg_and_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   int n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
+   int num_stored[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_gen_H_lep_in_eta_acc[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_gen_H_lep_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_or_more_gen_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_bc_in_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_pass_triger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_bc_in_sig_reg_and_pass_triger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_bc_in_sig_reg_and_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   int n_ev_4_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
 
-   float yield_stored[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_acc[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_4_or_more_gen_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_bc_in_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_bc_in_sig_reg_and_pass_triger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_bc_in_sig_reg_and_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc_and_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_H_lep_in_eta_pt_acc_pass_trig_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
-   float yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[Counters::num_of_processes][Counters::num_of_gen_channels];
+   float yield_stored[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_acc[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_4_or_more_gen_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_bc_in_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_bc_in_sig_reg_and_pass_triger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_bc_in_sig_reg_and_pass_triger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc_and_4_or_more_reco_lep[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc_and_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc_and_pass_trigger_no_1E[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_H_lep_in_eta_pt_acc_pass_trig_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
+   float yield_gen_lep_in_eta_pt_acc_pass_trig_no_1E_sig_reg[Counters::num_of_processes][Counters::num_of_gen_ch];
    
 // Counters
-   int tot_n_bc_in_sig_reg_exactly_4_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int tot_n_bc_in_sig_reg_at_least_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int tot_n_bc_in_sig_reg_exactly_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int tot_n_bc_in_sig_reg_exactly_6_good_leps[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int tot_n_bc_in_sig_reg_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int tot_n_bc_in_sig_reg_H_leps_are_good[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int tot_n_bc_in_sig_reg_exactly_4_good_leps[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int tot_n_bc_in_sig_reg_at_least_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int tot_n_bc_in_sig_reg_exactly_5_good_leps[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int tot_n_bc_in_sig_reg_exactly_6_good_leps[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int tot_n_bc_in_sig_reg_in_eta_pt_acc[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int tot_n_bc_in_sig_reg_H_leps_are_good[Counters::num_of_processes][Counters::num_of_reco_ch];
+
+   int n_ev_bc_in_sr_all_4_leps_right_[Counters::num_of_processes][Counters::num_of_reco_ch];
+
+   // WH
+   int n_WH_events_[Counters::num_of_W_decays];
+   int n_ev_H_leps_in_eta_pt_acc_WH_[Counters::num_of_W_decays];
+   int n_ev_H_leps_are_good_WH_[Counters::num_of_W_decays];
+   int n_ev_all_4_leps_right_WH_[Counters::num_of_W_decays];
+   int n_Z1_daughters_from_HWH[Counters::num_of_Z1_match_statuses][Counters::num_of_W_decays];
+   int n_Z2_daughters_from_HWH[Counters::num_of_Z2_match_statuses][Counters::num_of_W_decays];
+
+   //ZH
+   int n_ZH_events_[Counters::num_of_Z_decays];
+   int n_ev_H_leps_in_eta_pt_acc_ZH_[Counters::num_of_Z_decays];
+   int n_ev_H_leps_are_good_ZH_[Counters::num_of_Z_decays];
+   int n_ev_all_4_leps_right_ZH_[Counters::num_of_Z_decays];
+   int n_Z1_daughters_from_HZH[Counters::num_of_Z1_match_statuses][Counters::num_of_Z_decays];
+   int n_Z2_daughters_from_HZH[Counters::num_of_Z2_match_statuses][Counters::num_of_Z_decays];
+   
+   //ttH
+   int n_ttH_events_[Counters::num_of_Z_decays];
+   int n_ev_H_leps_in_eta_pt_acc_ttH_[Counters::num_of_Z_decays];
+   int n_ev_H_leps_are_good_ttH_[Counters::num_of_Z_decays];
+   int n_ev_all_4_leps_right_ttH_[Counters::num_of_Z_decays];
+   int n_Z1_daughters_from_HttH[Counters::num_of_Z1_match_statuses][Counters::num_of_Z_decays];
+   int n_Z2_daughters_from_HttH[Counters::num_of_Z2_match_statuses][Counters::num_of_Z_decays];
 
 
+
+   int n_ev_bc_in_sr_match_H_leps_[Counters::num_of_H_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
+   int n_ev_bc_in_sr_match_all_leps_[Counters::num_of_all_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
+   int n_ev_bc_in_sr_match_WH_leps_[Counters::num_of_WH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
+   int n_ev_bc_in_sr_match_ZH_leps_[Counters::num_of_ZH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
+   int n_ev_bc_in_sr_match_ttH_leps_[Counters::num_of_ttH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
 
    
 // Reconstructed counters
-   int num_of_events_with_bc[Counters::num_of_processes][Counters::num_of_reco_channels];
-   int num_of_events_with_bc_in_sr[Counters::num_of_processes][Counters::num_of_reco_channels];
-   float yield_of_events_with_bc[Counters::num_of_processes][Counters::num_of_reco_channels];
-   float yield_of_events_with_bc_in_sr[Counters::num_of_processes][Counters::num_of_reco_channels];
+   int num_of_events_with_bc[Counters::num_of_processes][Counters::num_of_reco_ch];
+   int num_of_events_with_bc_in_sr[Counters::num_of_processes][Counters::num_of_reco_ch];
+   float yield_of_events_with_bc[Counters::num_of_processes][Counters::num_of_reco_ch];
+   float yield_of_events_with_bc_in_sr[Counters::num_of_processes][Counters::num_of_reco_ch];
 
    
 

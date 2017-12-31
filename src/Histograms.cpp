@@ -128,17 +128,59 @@ Histograms::Histograms( float lumi)
    s_variable_.push_back("NBtaggedJets");
    s_variable_.push_back("MET");
    
-   
+   // Variable pairs
    s_variable_pair_.push_back("M4l_vs_Dkinbkg");
    s_variable_pair_.push_back("MZ2_vs_Dkinbkg");
    s_variable_pair_.push_back("D2jVbfHjj_vs_D2jqg");
    
+   // Decays
    s_variable_decay_.push_back("H_to_any");
    s_variable_decay_.push_back("H_to_4l");
    s_variable_decay_.push_back("H_to_2l2X");
    s_variable_decay_.push_back("H_to_4l_4_from_H");
    s_variable_decay_.push_back("H_to_4l_not_4_from_H");
 
+   // Match H leptons status
+   s_H_lep_match_status_.push_back("H_4");
+   s_H_lep_match_status_.push_back("H_3");
+   s_H_lep_match_status_.push_back("H_2");
+   s_H_lep_match_status_.push_back("H_1");
+   s_H_lep_match_status_.push_back("H_0");
+   s_H_lep_match_status_.push_back("ambiguity");
+
+   // Match all leptons status
+   s_all_lep_match_status_.push_back("all_40");
+   s_all_lep_match_status_.push_back("all_31");
+   s_all_lep_match_status_.push_back("all_22");
+   s_all_lep_match_status_.push_back("all_le_4");
+   s_all_lep_match_status_.push_back("ambiguity");
+   
+   // Match WH leptons status
+   s_WH_lep_match_status_.push_back("WH_40_40");
+   s_WH_lep_match_status_.push_back("WH_40_41");
+   s_WH_lep_match_status_.push_back("WH_31_41");
+   s_WH_lep_match_status_.push_back("WH_le_4");
+   s_WH_lep_match_status_.push_back("ambiguity");
+   
+   // Match ZH leptons status
+   s_ZH_lep_match_status_.push_back("ZH_40_40");
+   s_ZH_lep_match_status_.push_back("ZH_40_42");
+   s_ZH_lep_match_status_.push_back("ZH_31_42");
+   s_ZH_lep_match_status_.push_back("ZH_22_42");
+   s_ZH_lep_match_status_.push_back("ZH_22_22");
+   s_ZH_lep_match_status_.push_back("ZH_le_4");
+   s_ZH_lep_match_status_.push_back("ambiguity");
+   
+   // Match ttH leptons status
+   s_ttH_lep_match_status_.push_back("ttH_40_40");
+   s_ttH_lep_match_status_.push_back("ttH_40_41");
+   s_ttH_lep_match_status_.push_back("ttH_31_41");
+   s_ttH_lep_match_status_.push_back("ttH_40_42");
+   s_ttH_lep_match_status_.push_back("ttH_31_42");
+   s_ttH_lep_match_status_.push_back("ttH_22_42");
+   s_ttH_lep_match_status_.push_back("ttH_22_22");
+   s_ttH_lep_match_status_.push_back("ttH_le_4");
+   s_ttH_lep_match_status_.push_back("ambiguity");
    
    
    TString varLabel[74] = {
@@ -331,36 +373,55 @@ Histograms::Histograms( float lumi)
       histo_label_ = ";" + Variables::pt().var_X_label + ";" + Variables::eta().var_X_label;
       h_gen_H_eta_vs_pt_[i_proc] = new TH2F(histo_name_, histo_label_, 20, 0, 100, 20, 0, 5);
       
-      for ( int i_rc = 0; i_rc < Counters::num_of_reco_channels; i_rc++ )
+      for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
       {
-         for ( int i_var = 0; i_var < Counters::num_of_variables; i_var++ )
+         for ( int i_var = 0; i_var < Counters::num_of_vars; i_var++ )
          {
-           
             histo_label_ = ";" + varLabel[i_var] + ";" + "# of events";
 
             histo_name_ = "h_bc_in_sig_reg_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
             h_bc_in_sig_reg_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
                                                     get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
             
-            histo_name_ = "h_bc_in_sig_reg_match_H_leps_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_match_H_leps_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                 get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            for ( int i_ms = 0; i_ms < Counters::num_of_H_lep_match_statuses; i_ms++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_match_H_leps_" + s_variable_.at(i_var) + "_" + s_H_lep_match_status_.at(i_ms) + "_"
+                                                             + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+               h_bc_in_sig_reg_match_H_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
+                                                                          get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            }
             
-            histo_name_ = "h_bc_in_sig_reg_match_all_leps_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_match_all_leps_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                   get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            for ( int i_ms = 0; i_ms < Counters::num_of_all_lep_match_statuses; i_ms++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_match_all_leps_" + s_variable_.at(i_var) + "_" + s_all_lep_match_status_.at(i_ms) + "_"
+                                                               + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+               h_bc_in_sig_reg_match_all_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
+                                                                            get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            }
             
-            histo_name_ = "h_bc_in_sig_reg_match_WH_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_match_WH_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                             get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            for ( int i_ms = 0; i_ms < Counters::num_of_WH_lep_match_statuses; i_ms++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_match_WH_leps_" + s_variable_.at(i_var) + "_" + s_WH_lep_match_status_.at(i_ms) + "_"
+                                                              + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+               h_bc_in_sig_reg_match_WH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
+                                                                           get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            }
             
-            histo_name_ = "h_bc_in_sig_reg_match_ZH_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_match_ZH_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                             get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            for ( int i_ms = 0; i_ms < Counters::num_of_ZH_lep_match_statuses; i_ms++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_match_ZH_leps_" + s_variable_.at(i_var) + "_" + s_ZH_lep_match_status_.at(i_ms) + "_"
+                                                              + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+               h_bc_in_sig_reg_match_ZH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
+                                                                           get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            }
             
-            histo_name_ = "h_bc_in_sig_reg_match_ttH_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_match_ttH_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                              get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            for ( int i_ms = 0; i_ms < Counters::num_of_ttH_lep_match_statuses; i_ms++ )
+            {
+               histo_name_ = "h_bc_in_sig_reg_match_ttH_leps_" + s_variable_.at(i_var) + "_" + s_ttH_lep_match_status_.at(i_ms) + "_"
+                                                               + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+               h_bc_in_sig_reg_match_ttH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
+                                                                            get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            }
          } // end i_var
          
          // Variable pairs histograms
@@ -392,7 +453,7 @@ Histograms::Histograms( float lumi)
       } // end i_rc
       
    
-      for ( int i_gc = 0; i_gc < Counters::num_of_gen_channels; i_gc++ )
+      for ( int i_gc = 0; i_gc < Counters::num_of_gen_ch; i_gc++ )
       {
          histo_name_ = "h_num_reco_H_ele_in_eta_pt_acc_" + s_process_.at(i_proc) + "_" + s_gen_ch_.at(i_gc);
          histo_label_ = ";" + Variables::n_ele().var_X_label + ";" + Variables::n_ele().var_Y_label;
@@ -543,22 +604,58 @@ void Histograms::FillPtEtaH( float pt, float eta, float weight, int proc )
 //=================================================================================================
 void Histograms::FillVariables( float var_value, float weight, int variable, int proc, int rc_1, int rc_2 )
 {
-
-//      if ( variable == Counters::M4l ) cout << var_value << endl;
-
    h_bc_in_sig_reg_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
    h_bc_in_sig_reg_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
 
-   
-//   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//
-//   h_bc_in_sig_reg_match_H_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_all_leps_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_ZH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
-//   h_bc_in_sig_reg_match_ttH_[variable][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+
+
+//=================================================================================================
+void Histograms::FillMatchLepsH( float var_value, float weight, int variable, int match_status, int proc, int rc_1, int rc_2 )
+{
+   h_bc_in_sig_reg_match_H_leps_[variable][match_status][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_match_H_leps_[variable][match_status][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
+//=================================================================================================
+void Histograms::FillMatchLepsAll( float var_value, float weight, int variable, int match_status, int proc, int rc_1, int rc_2 )
+{
+   h_bc_in_sig_reg_match_all_leps_[variable][match_status][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_match_all_leps_[variable][match_status][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
+//=================================================================================================
+void Histograms::FillMatchLepsWH( float var_value, float weight, int variable, int match_status, int proc, int rc_1, int rc_2 )
+{
+   h_bc_in_sig_reg_match_WH_leps_[variable][match_status][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_match_WH_leps_[variable][match_status][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
+//=================================================================================================
+void Histograms::FillMatchLepsZH( float var_value, float weight, int variable, int match_status, int proc, int rc_1, int rc_2 )
+{
+   h_bc_in_sig_reg_match_ZH_leps_[variable][match_status][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_match_ZH_leps_[variable][match_status][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+}
+//=================================================================================================
+
+
+
+//=================================================================================================
+void Histograms::FillMatchLepsttH( float var_value, float weight, int variable, int match_status, int proc, int rc_1, int rc_2 )
+{
+   h_bc_in_sig_reg_match_ttH_leps_[variable][match_status][proc][rc_1]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
+   h_bc_in_sig_reg_match_ttH_leps_[variable][match_status][proc][rc_2]->Fill(var_value, (proc == Counters::AllData) ? 1. : weight);
 }
 //=================================================================================================
 
@@ -603,16 +700,32 @@ void Histograms::SaveHistograms( TString file_name )
       h_gen_H_eta_[i_proc]->Write();
       h_gen_H_eta_vs_pt_[i_proc]->Write();
    
-     for ( int i_rc = 0; i_rc < Counters::num_of_reco_channels; i_rc++ )
+     for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
       {
-         for ( int i_var = 0; i_var < Counters::num_of_variables; i_var++ )
+         for ( int i_var = 0; i_var < Counters::num_of_vars; i_var++ )
          {
             h_bc_in_sig_reg_[i_var][i_proc][i_rc]->Write();
-            h_bc_in_sig_reg_match_H_leps_[i_var][i_proc][i_rc]->Write();
-            h_bc_in_sig_reg_match_all_leps_[i_var][i_proc][i_rc]->Write();
-            h_bc_in_sig_reg_match_WH_[i_var][i_proc][i_rc]->Write();
-            h_bc_in_sig_reg_match_ZH_[i_var][i_proc][i_rc]->Write();
-            h_bc_in_sig_reg_match_ttH_[i_var][i_proc][i_rc]->Write();
+            
+            for ( int i_ms = 0; i_ms < Counters::num_of_H_lep_match_statuses; i_ms++ )
+            {
+               h_bc_in_sig_reg_match_H_leps_[i_var][i_ms][i_proc][i_rc]->Write();
+            }
+            for ( int i_ms = 0; i_ms < Counters::num_of_all_lep_match_statuses; i_ms++ )
+            {
+               h_bc_in_sig_reg_match_all_leps_[i_var][i_ms][i_proc][i_rc]->Write();
+            }
+            for ( int i_ms = 0; i_ms < Counters::num_of_WH_lep_match_statuses; i_ms++ )
+            {
+               h_bc_in_sig_reg_match_WH_leps_[i_var][i_ms][i_proc][i_rc]->Write();
+            }
+            for ( int i_ms = 0; i_ms < Counters::num_of_ZH_lep_match_statuses; i_ms++ )
+            {
+               h_bc_in_sig_reg_match_ZH_leps_[i_var][i_ms][i_proc][i_rc]->Write();
+            }
+            for ( int i_ms = 0; i_ms < Counters::num_of_ttH_lep_match_statuses; i_ms++ )
+            {
+               h_bc_in_sig_reg_match_ttH_leps_[i_var][i_ms][i_proc][i_rc]->Write();
+            }
          } // end i_var
          
          for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
@@ -627,7 +740,7 @@ void Histograms::SaveHistograms( TString file_name )
       } // end i_rc
 
 
-      for ( int i_gc = 0; i_gc < Counters::num_of_gen_channels; i_gc++ )
+      for ( int i_gc = 0; i_gc < Counters::num_of_gen_ch; i_gc++ )
       {
          h_num_reco_H_ele_in_eta_pt_acc_[i_proc][i_gc]->Write();
          h_num_reco_H_mu_in_eta_pt_acc_[i_proc][i_gc]->Write();

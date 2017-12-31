@@ -22,6 +22,7 @@ Categorisation::Categorisation( float lumi ):Tree()
    m4l_max_ = 130.;
    
    histograms = new Histograms(lumi_);
+   roc = new ROC();
    
 }
 //============================================================
@@ -145,6 +146,7 @@ void Categorisation::MakeHistograms( TString input_file_name )
       if ( REQUIRE_H_LEPTONS_ARE_GOOD && !H_leptons_are_good_ )                   continue;
 
       FillHistograms();
+      MakeROCs();
 
    } // end events loop
 }
@@ -899,7 +901,6 @@ void Categorisation::UseMatchingInfo()
 
 
 
-
    for ( int i_gen_H_lep = 0; i_gen_H_lep < 4; i_gen_H_lep++ )
    {
       if ( counter_map["n_reco_lep_matched_to_gen_H_lep"][i_gen_H_lep] == 1 ) n_ones++;
@@ -916,51 +917,45 @@ void Categorisation::UseMatchingInfo()
    }
    
    
-   int current_match_H_lep_status = -1;
-   int current_match_all_lep_status = -1;
    
    if ( found_matching_ambiguity)
    {
-      current_match_H_lep_status = 5;
+      H_lep_match_status = 5;
    }
    else
    {
-      if ( n_ones_H_lep == 4 ) current_match_H_lep_status = 0;
-      if ( n_ones_H_lep == 3 ) current_match_H_lep_status = 1;
-      if ( n_ones_H_lep == 2 ) current_match_H_lep_status = 2;
-      if ( n_ones_H_lep == 1 ) current_match_H_lep_status = 3;
-      if ( n_ones_H_lep == 0 ) current_match_H_lep_status = 4;
+      if ( n_ones_H_lep == 4 ) H_lep_match_status = 0;
+      if ( n_ones_H_lep == 3 ) H_lep_match_status = 1;
+      if ( n_ones_H_lep == 2 ) H_lep_match_status = 2;
+      if ( n_ones_H_lep == 1 ) H_lep_match_status = 3;
+      if ( n_ones_H_lep == 0 ) H_lep_match_status = 4;
    }
    
    if ( found_matching_ambiguity )
    {
-      current_match_all_lep_status = 4;
+      all_lep_match_status = 4;
    }
    else
    {
-      if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 ) current_match_all_lep_status = 0;
-      if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 ) current_match_all_lep_status = 1;
-      if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 ) current_match_all_lep_status = 2;
-      if ( n_ones_H_lep + n_ones_assoc_lep < 4 )        current_match_all_lep_status = 3;
+      if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 ) all_lep_match_status = 0;
+      if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 ) all_lep_match_status = 1;
+      if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 ) all_lep_match_status = 2;
+      if ( n_ones_H_lep + n_ones_assoc_lep < 4 )        all_lep_match_status = 3;
    }
    
-   // WH, ZH and ttH match status
-   int current_match_WH_status = -1;
-   int current_match_ZH_status = -1;
-   int current_match_ttH_status = -1;
    
    // WH
    if ( current_process_ == Counters::H125WH )
    {
       if ( found_matching_ambiguity )
       {
-         current_match_WH_status = 4;
+         WH_lep_match_status = 4;
       }
       else
       {
          if ( n_ones_H_lep + n_ones_assoc_lep < 4 )
          {
-            current_match_WH_status = 3;
+            WH_lep_match_status = 3;
          }
          else
          {
@@ -968,7 +963,7 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_WH_status = 0;
+                  WH_lep_match_status = 0;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -976,11 +971,11 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_WH_status = 1;
+                  WH_lep_match_status = 1;
                }
                else if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 )
                {
-                  current_match_WH_status = 2;
+                  WH_lep_match_status = 2;
                }
                else cout << "[ERROR} n_ones" << endl;
             }
@@ -994,13 +989,13 @@ void Categorisation::UseMatchingInfo()
    {
       if ( found_matching_ambiguity )
       {
-         current_match_ZH_status = 6;
+         ZH_lep_match_status = 6;
       }
       else
       {
          if ( n_ones_H_lep + n_ones_assoc_lep < 4 )
          {
-            current_match_ZH_status = 5;
+            ZH_lep_match_status = 5;
          }
          else
          {
@@ -1008,7 +1003,7 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_ZH_status = 0;
+                  ZH_lep_match_status = 0;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1016,15 +1011,15 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_ZH_status = 1;
+                  ZH_lep_match_status = 1;
                }
                else if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 )
                {
-                  current_match_ZH_status = 2;
+                  ZH_lep_match_status = 2;
                }
                else if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 )
                {
-                  current_match_ZH_status = 3;
+                  ZH_lep_match_status = 3;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1032,7 +1027,7 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 )
                {
-                  current_match_ZH_status = 4;
+                  ZH_lep_match_status = 4;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1046,13 +1041,13 @@ void Categorisation::UseMatchingInfo()
    {
       if ( found_matching_ambiguity )
       {
-         current_match_ttH_status = 8;
+         ttH_lep_match_status = 8;
       }
       else
       {
          if ( n_ones_H_lep + n_ones_assoc_lep < 4 )
          {
-            current_match_ttH_status = 7;
+            ttH_lep_match_status = 7;
          }
          else
          {
@@ -1060,7 +1055,7 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_ttH_status = 0;
+                  ttH_lep_match_status = 0;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1068,11 +1063,11 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_ttH_status = 1;
+                  ttH_lep_match_status = 1;
                }
                else if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 )
                {
-                  current_match_ttH_status = 2;
+                  ttH_lep_match_status = 2;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1080,15 +1075,15 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 4 && n_ones_assoc_lep == 0 )
                {
-                  current_match_ttH_status = 3;
+                  ttH_lep_match_status = 3;
                }
                else if ( n_ones_H_lep == 3 && n_ones_assoc_lep == 1 )
                {
-                  current_match_ttH_status = 4;
+                  ttH_lep_match_status = 4;
                }
                else if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 )
                {
-                  current_match_ttH_status = 5;
+                  ttH_lep_match_status = 5;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1096,7 +1091,7 @@ void Categorisation::UseMatchingInfo()
             {
                if ( n_ones_H_lep == 2 && n_ones_assoc_lep == 2 )
                {
-                  current_match_ttH_status = 6;
+                  ttH_lep_match_status = 6;
                }
                else cout << "[ERROR] n_ones" << endl;
             }
@@ -1105,25 +1100,23 @@ void Categorisation::UseMatchingInfo()
       }
    }
 
-   int current_Z1_match_status = -1;
-   int current_Z2_match_status = -1;
-   
+
    if ( n_gen_H_lep_matched_to_Z1_lep[0] > 1 || n_gen_H_lep_matched_to_Z1_lep[1] > 1 )
    {
-      current_Z1_match_status = 3;
+      Z1_match_status = 3;
    }
    else
    {
-      current_Z1_match_status = 2 - (n_gen_H_lep_matched_to_Z1_lep[0] + n_gen_H_lep_matched_to_Z1_lep[1]);
+      Z1_match_status = 2 - (n_gen_H_lep_matched_to_Z1_lep[0] + n_gen_H_lep_matched_to_Z1_lep[1]);
    }
    
    if ( n_gen_H_lep_matched_to_Z2_lep[0] > 1 || n_gen_H_lep_matched_to_Z2_lep[1] > 1 )
    {
-      current_Z2_match_status = 3;
+      Z2_match_status = 3;
    }
    else
    {
-      current_Z2_match_status = 2 - (n_gen_H_lep_matched_to_Z2_lep[0] + n_gen_H_lep_matched_to_Z2_lep[1]);
+      Z2_match_status = 2 - (n_gen_H_lep_matched_to_Z2_lep[0] + n_gen_H_lep_matched_to_Z2_lep[1]);
    }
 }
 //====================================
@@ -1341,6 +1334,10 @@ void Categorisation::FillHistograms()
 
 //   cout << "[INFO] Filling variable map..." << endl;
 
+   //Probabilities
+   Pvbf = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_2j;
+   Phjj = p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+
    // 1D histo maps
    variable_map[Counters::M4l].first  = ZZMass;
    variable_map[Counters::M4l].second = 1;
@@ -1360,10 +1357,10 @@ void Categorisation::FillHistograms()
    variable_map[Counters::DiJetFisher].first = DiJetFisher;
    variable_map[Counters::DiJetFisher].second = (nCleanedJets >= 2);
 
-   variable_map[Counters::Pvbf].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_2j;
+   variable_map[Counters::Pvbf].first  = Pvbf;
    variable_map[Counters::Pvbf].second = (nCleanedJets >= 2);
 
-   variable_map[Counters::Phjj].first  = p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
+   variable_map[Counters::Phjj].first  = Phjj;
    variable_map[Counters::Phjj].second = (nCleanedJets >= 2);
 
    variable_map[Counters::Pvbf1j].first  = p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_1j;
@@ -1590,6 +1587,7 @@ void Categorisation::FillHistograms()
       histograms->FillVariables( it->second.first, event_weight_, it->first, current_process_, reco_ch_1, reco_ch_2 );
    }
 
+
    for ( map<Counters::variable_pair, tuple<float, float, bool, bool>>::iterator it = variable_pair_map.begin(); it != variable_pair_map.end(); it++ )
    {
       if ( !get<2>(it->second) ) continue;
@@ -1597,121 +1595,236 @@ void Categorisation::FillHistograms()
       
       if ( !get<3>(it->second) ) continue;
       histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 0, reco_ch_1, reco_ch_2 );
+      
+      if ( n_gen_H_lep == 4 )
+      {
+         histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 1, reco_ch_1, reco_ch_2 );
+         
+         if ( H_lep_match_status == 0 ) // n_ones_H_lep == 4
+         {
+            histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 3, reco_ch_1, reco_ch_2 );
+         } // end if
+         else if ( H_lep_match_status < 5 )
+         {
+            histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 4, reco_ch_1, reco_ch_2 );
+         } // end if
+      } // end if
+      else
+      {
+         histograms->FillVariablePairsDecay( get<0>(it->second), get<1>(it->second), event_weight_, it->first, current_process_, 2, reco_ch_1, reco_ch_2 );
+      } // end else
+   } // end for
+
+
+   // H
+   n_ev_bc_in_sr_match_H_leps_[H_lep_match_status][current_process_][reco_ch_1]++;
+   n_ev_bc_in_sr_match_H_leps_[H_lep_match_status][current_process_][reco_ch_2]++;
+
+   for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
+   {
+      histograms->FillMatchLepsH( it->second.first, event_weight_, it->first, H_lep_match_status, current_process_, reco_ch_1, reco_ch_2 );
+   }
+   
+   // All
+   n_ev_bc_in_sr_match_all_leps_[all_lep_match_status][current_process_][reco_ch_1]++;
+   n_ev_bc_in_sr_match_all_leps_[all_lep_match_status][current_process_][reco_ch_2]++;
+
+   for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
+   {
+      histograms->FillMatchLepsAll( it->second.first, event_weight_, it->first, all_lep_match_status, current_process_, reco_ch_1, reco_ch_2 );
+   }
+
+   // WH
+   if ( current_process_ == Counters::H125WH )
+   {
+      n_ev_bc_in_sr_match_WH_leps_[WH_lep_match_status][current_process_][reco_ch_1]++;
+      n_ev_bc_in_sr_match_WH_leps_[WH_lep_match_status][current_process_][reco_ch_2]++;
+
+      for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
+      {
+         histograms->FillMatchLepsWH( it->second.first, event_weight_, it->first, WH_lep_match_status, current_process_, reco_ch_1, reco_ch_2 );
+      }
+   }
+
+   // ZH
+   if ( current_process_ == Counters::H125ZH )
+   {
+      n_ev_bc_in_sr_match_ZH_leps_[ZH_lep_match_status][current_process_][reco_ch_1]++;
+      n_ev_bc_in_sr_match_ZH_leps_[ZH_lep_match_status][current_process_][reco_ch_2]++;
+
+      for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
+      {
+         histograms->FillMatchLepsZH( it->second.first, event_weight_, it->first, ZH_lep_match_status, current_process_, reco_ch_1, reco_ch_2 );
+      }
+   }
+
+   // ttH
+   if ( current_process_ == Counters::H125ttH )
+   {
+      n_ev_bc_in_sr_match_ttH_leps_[ttH_lep_match_status][current_process_][reco_ch_1]++;
+      n_ev_bc_in_sr_match_ttH_leps_[ttH_lep_match_status][current_process_][reco_ch_2]++;
+
+      for ( map<Counters::variable, pair<float, bool>>::iterator it = variable_map.begin(); it != variable_map.end(); it++ )
+      {
+         histograms->FillMatchLepsttH( it->second.first, event_weight_, it->first, ttH_lep_match_status, current_process_, reco_ch_1, reco_ch_2 );
+      }
+   }
+
+   if ( all_lep_match_status == Counters::all_40 )
+   {
+      n_ev_bc_in_sr_all_4_leps_right_[current_process_][reco_ch_1]++;
+      n_ev_bc_in_sr_all_4_leps_right_[current_process_][reco_ch_2]++;
    }
 
 
+   // WH decays
+   if ( current_process_ == Counters::H125WH )
+   {
+      if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 0 )
+      {
+         current_W_decay == Counters::W_dec_40;
+      }
+      else if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 1 )
+      {
+         current_W_decay == Counters::W_dec_41;
+      }
+      else cout << "[ERROR] Current W decay error!" << endl;
+      
+      n_WH_events_[current_W_decay]++;
+   
+      if ( n_gen_H_lep_in_eta_pt_acc == 4 )
+      {
+         n_ev_H_leps_in_eta_pt_acc_WH_[current_W_decay]++;
+      }
+      
+      if ( H_leptons_are_good_ )
+      {
+         n_ev_H_leps_are_good_WH_[current_W_decay]++;
+      }
+      
+      if ( all_lep_match_status == Counters::all_40 )
+      {
+         n_ev_all_4_leps_right_WH_[current_W_decay]++;
+      }
+      n_Z1_daughters_from_HWH[current_W_decay][Z1_match_status]++;
+      n_Z2_daughters_from_HWH[current_W_decay][Z2_match_status]++;
+   }
 
 
-//   h2DBCInSRDecays[v2][currentProcess][0][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//   h2DBCInSRDecays[v2][currentProcess][0][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//
-//   if(nGenHLep==4){
-//     h2DBCInSRDecays[v2][currentProcess][1][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//     h2DBCInSRDecays[v2][currentProcess][1][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//     if(currentMatchHLepsStatus==0){
-//       h2DBCInSRDecays[v2][currentProcess][3][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//       h2DBCInSRDecays[v2][currentProcess][3][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//     }else if(currentMatchHLepsStatus<5){
-//       h2DBCInSRDecays[v2][currentProcess][4][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//       h2DBCInSRDecays[v2][currentProcess][4][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//     }
-//   }else{
-//     h2DBCInSRDecays[v2][currentProcess][2][rc]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//     h2DBCInSRDecays[v2][currentProcess][2][rc2]->Fill(varVal[varPairRef[v2][0]],varVal[varPairRef[v2][1]],eventWeight);
-//   }
-//      }
+   // ZH decays
+   if ( current_process_ == Counters::H125ZH )
+   {
+      if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 0 )
+      {
+         current_Z_decay == Counters::Z_dec_40;
+      }
+      else if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 2 )
+      {
+         current_Z_decay == Counters::Z_dec_42;
+      }
+      else if ( n_gen_H_lep == 2 && n_gen_assoc_lep == 2 )
+      {
+         current_Z_decay == Counters::Z_dec_22;
+      }
+      else cout << "[ERROR] Current Z decay error!" << endl;
+      
+      n_ZH_events_[current_Z_decay]++;
+   
+      if ( n_gen_H_lep_in_eta_pt_acc == 4 )
+      {
+         n_ev_H_leps_in_eta_pt_acc_ZH_[current_Z_decay]++;
+      }
+      
+      if ( H_leptons_are_good_ )
+      {
+         n_ev_H_leps_are_good_ZH_[current_Z_decay]++;
+      }
+      
+      if ( all_lep_match_status == Counters::all_40 )
+      {
+         n_ev_all_4_leps_right_ZH_[current_Z_decay]++;
+      }
+      n_Z1_daughters_from_HZH[current_Z_decay][Z1_match_status]++;
+      n_Z2_daughters_from_HZH[current_Z_decay][Z2_match_status]++;
+   }
 
 
-//
-//      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc]++;
-//      nbWithBCInSRMatchHLeps[currentMatchHLepsStatus][currentProcess][rc2]++;
-//
-//      for(int v=0; v<nVariables; v++){
-//   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
-//   hBCInSRMatchHLeps[v][currentMatchHLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
-//      }
-//
-//      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc]++;
-//      nbWithBCInSRMatchAllLeps[currentMatchAllLepsStatus][currentProcess][rc2]++;
-//
-//      for(int v=0; v<nVariables; v++){
-//   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc]->Fill(varVal[v],eventWeight);
-//   hBCInSRMatchAllLeps[v][currentMatchAllLepsStatus][currentProcess][rc2]->Fill(varVal[v],eventWeight);
-//      }
-//
-//      if(currentProcess==WH){
-//   nbWithBCInSRMatchWH[currentMatchWHStatus][rc]++;
-//   nbWithBCInSRMatchWH[currentMatchWHStatus][rc2]++;
-//   for(int v=0; v<nVariables; v++){
-//     hBCInSRMatchWH[v][currentMatchWHStatus][rc]->Fill(varVal[v],eventWeight);
-//     hBCInSRMatchWH[v][currentMatchWHStatus][rc2]->Fill(varVal[v],eventWeight);
-//   }
-//      }
-//      if(currentProcess==ZH){
-//   nbWithBCInSRMatchZH[currentMatchZHStatus][rc]++;
-//   nbWithBCInSRMatchZH[currentMatchZHStatus][rc2]++;
-//   for(int v=0; v<nVariables; v++){
-//     hBCInSRMatchZH[v][currentMatchZHStatus][rc]->Fill(varVal[v],eventWeight);
-//     hBCInSRMatchZH[v][currentMatchZHStatus][rc2]->Fill(varVal[v],eventWeight);
-//   }
-//      }
-//      if(currentProcess==ttH){
-//   nbWithBCInSRMatchttH[currentMatchttHStatus][rc]++;
-//   nbWithBCInSRMatchttH[currentMatchttHStatus][rc2]++;
-//   for(int v=0; v<nVariables; v++){
-//     hBCInSRMatchttH[v][currentMatchttHStatus][rc]->Fill(varVal[v],eventWeight);
-//     hBCInSRMatchttH[v][currentMatchttHStatus][rc2]->Fill(varVal[v],eventWeight);
-//   }
-//      }
-//
-//      if(currentMatchAllLepsStatus==0){
-//   nbWithBCInSRAll4LepRight[currentProcess][rc]++;
-//   nbWithBCInSRAll4LepRight[currentProcess][rc2]++;
-//      }
-//
-//      if(currentProcess==WH){
-//   Int_t currentWDecay = -1;
-//   if(nGenHLep==4 && nGenAssocLep==0) currentWDecay = 0;
-//   else if(nGenHLep==4 && nGenAssocLep==1) currentWDecay = 1;
-//   else cout<<"error"<<endl;
-//   nbTotalWH[currentWDecay]++;
-//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccWH[currentWDecay]++;
-//   if(HLepsAreGood) nbHLepsAreGoodWH[currentWDecay]++;
-//   if(currentMatchAllLepsStatus==0) nbAll4LepRightWH[currentWDecay]++;
-//   nbZ1DaughtersFromHWH[currentWDecay][currentZ1MatchStatus]++;
-//   nbZ2DaughtersFromHWH[currentWDecay][currentZ2MatchStatus]++;
-//      }
-//      if(currentProcess==ZH){
-//   Int_t currentZDecay = -1;
-//   if(nGenHLep==4 && nGenAssocLep==0) currentZDecay = 0;
-//   else if(nGenHLep==4 && nGenAssocLep==2) currentZDecay = 1;
-//   else if(nGenHLep==2 && nGenAssocLep==2) currentZDecay = 2;
-//   else cout<<"error"<<endl;
-//   nbTotalZH[currentZDecay]++;
-//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccZH[currentZDecay]++;
-//   if(HLepsAreGood) nbHLepsAreGoodZH[currentZDecay]++;
-//   if(currentMatchAllLepsStatus==0) nbAll4LepRightZH[currentZDecay]++;
-//   nbZ1DaughtersFromHZH[currentZDecay][currentZ1MatchStatus]++;
-//   nbZ2DaughtersFromHZH[currentZDecay][currentZ2MatchStatus]++;
-//      }
-//      if(currentProcess==ttH){
-//   Int_t currentttDecay = -1;
-//   if(nGenHLep==4 && nGenAssocLep==0) currentttDecay = 0;
-//   else if(nGenHLep==4 && nGenAssocLep==1) currentttDecay = 1;
-//   else if(nGenHLep==4 && nGenAssocLep==2) currentttDecay = 2;
-//   else if(nGenHLep==2 && nGenAssocLep==2) currentttDecay = 3;
-//   else cout<<"error"<<endl;
-//   nbTotalttH[currentttDecay]++;
-//   if(nGenHLepInEtaPtAcc==4) nbHLepsAreInEtaPtAccttH[currentttDecay]++;
-//   if(HLepsAreGood) nbHLepsAreGoodttH[currentttDecay]++;
-//   if(currentMatchAllLepsStatus==0) nbAll4LepRightttH[currentttDecay]++;
-//   nbZ1DaughtersFromHttH[currentttDecay][currentZ1MatchStatus]++;
-//   nbZ2DaughtersFromHttH[currentttDecay][currentZ2MatchStatus]++;
-//      }
-//
-//      Bool_t rocPassCut[nROCs] = {
-//   nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets==1,nJets==1,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nJets>=2,
-//      };
+   // ttH decays
+   if ( current_process_ == Counters::H125ttH )
+   {
+      if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 0 )
+      {
+         current_tt_decay == Counters::tt_dec_40;
+      }
+      else if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 1 )
+      {
+         current_tt_decay == Counters::tt_dec_41;
+      }
+      else if ( n_gen_H_lep == 4 && n_gen_assoc_lep == 2 )
+      {
+         current_tt_decay == Counters::tt_dec_42;
+      }
+      else if ( n_gen_H_lep == 2 && n_gen_assoc_lep == 2 )
+      {
+         current_tt_decay == Counters::tt_dec_22;
+      }
+      else cout << "[ERROR] Current tt decay error!" << endl;
+      
+      n_ttH_events_[current_tt_decay]++;
+   
+      if ( n_gen_H_lep_in_eta_pt_acc == 4 )
+      {
+         n_ev_H_leps_in_eta_pt_acc_ttH_[current_tt_decay]++;
+      }
+      
+      if ( H_leptons_are_good_ )
+      {
+         n_ev_H_leps_are_good_ttH_[current_tt_decay]++;
+      }
+      
+      if ( all_lep_match_status == Counters::all_40 )
+      {
+         n_ev_all_4_leps_right_ttH_[current_tt_decay]++;
+      }
+      n_Z1_daughters_from_HttH[current_tt_decay][Z1_match_status]++;
+      n_Z2_daughters_from_HttH[current_tt_decay][Z2_match_status]++;
+   }
+}
+//====================================
+
+
+
+//=============================
+void Categorisation::MakeROCs()
+{
+   roc->Fill( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
+   roc->Fill( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
+   roc->Fill( "Pvbf", Pvbf, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
+   roc->Fill( "Pvbf", Pvbf, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
+   
+   for ( vector<ROC::ROCs>::iterator it = roc->vec_ROCs.begin(); it != roc->vec_ROCs.end(); it++ )
+   {
+      if ( !it->jet_cut ) continue;
+
+      if ( current_process_ == it->sig_proc )
+      {
+      
+      }
+      else if (current_process_ == it->bkg_proc )
+      {
+      
+      }
+
+   }
+   
+//   cout << roc->vec_ROCs.at(2).var_value << " " << roc->vec_ROCs.at(2).jet_cut << endl;
+}
+//=============================
+
+
+
+
+
 //      for(int ro=0; ro<nROCs; ro++){
 //   if(!rocPassCut[ro]) continue;
 //   if(currentProcess==rocRef[ro][1])
@@ -1729,8 +1842,6 @@ void Categorisation::FillHistograms()
 
 
 
-}
-//====================================
 
 
 
@@ -1785,6 +1896,9 @@ void Categorisation::ResetPerEventStuff()
    sorted_gen_H_lep_abs_eta_.clear();
    sorted_cand_lep_pt_.clear();
    sorted_cand_lep_abs_eta_.clear();
+   
+   // Clean ROCs
+   roc->Clean();
 }
 //==========================================
 

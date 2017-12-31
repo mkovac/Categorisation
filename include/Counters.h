@@ -192,7 +192,7 @@ public:
       MAX_NUMBER_OF_VARIABLES
    };
    
-    enum variable_pair
+   enum variable_pair
    {
       M4l_vs_Dkinbkg,
       MZ2_vs_Dkinbkg,
@@ -200,19 +200,130 @@ public:
       MAX_NUMBER_OF_VARIABLE_PAIRS
    };
    
+   enum H_lep_match_status
+   {
+      H_4         = 0,
+      H_3         = 1,
+      H_2         = 2,
+      H_1         = 3,
+      H_0         = 4,
+      H_ambiguity = 5,
+      MAX_NUMBER_OF_H_LEP_MATCH_STATUSES
+   };
    
+   // 40 = n_ones_H = 4, n_ones_assoc = 0
+   enum all_lep_match_status
+   {
+      all_40        = 0,
+      all_31        = 1,
+      all_22        = 2,
+      all_le_4      = 3,
+      all_ambiguity = 4,
+      MAX_NUMBER_OF_ALL_LEP_MATCH_STATUSES
+   };
+   
+   // 40_40 = n_ones_H = 4, n_ones_assoc = 0, n_gen_H_lep = 4, n_gen_assoc_lep = 0
+   enum WH_lep_match_status
+   {
+      WH_40_40     = 0,
+      WH_40_41     = 1,
+      WH_31_41     = 2,
+      WH_le_4      = 3,
+      WH_ambiguity = 4,
+      MAX_NUMBER_OF_WH_LEP_MATCH_STATUSES
+   };
 
+   // 40_40 = n_ones_H = 4, n_ones_assoc = 0, n_gen_H_lep = 4, n_gen_assoc_lep = 0
+   enum ZH_lep_match_status
+   {
+      ZH_40_40     = 0,
+      ZH_40_42     = 1,
+      ZH_31_42     = 2,
+      ZH_22_42     = 3,
+      ZH_22_22     = 4,
+      ZH_le_4      = 5,
+      ZH_ambiguity = 6,
+      MAX_NUMBER_OF_ZH_LEP_MATCH_STATUSES
+   };
+   
+   // 40_40 = n_ones_H = 4, n_ones_assoc = 0, n_gen_H_lep = 4, n_gen_assoc_lep = 0
+   enum ttH_lep_match_status
+   {
+      ttH_40_40     = 0,
+      ttH_40_41     = 1,
+      ttH_31_41     = 2,
+      ttH_40_42     = 3,
+      ttH_31_42     = 3,
+      ttH_22_42     = 5,
+      ttH_22_22     = 6,
+      ttH_le_4      = 7,
+      ttH_ambiguity = 8,
+      MAX_NUMBER_OF_TTH_LEP_MATCH_STATUSES
+   };
+   
+   enum W_decays
+   {
+      W_dec_40 = 0,
+      W_dec_41 = 1,
+      MAX_NUMBER_OF_W_DECAYS
+   };
+   
+   enum Z_decays
+   {
+      Z_dec_40 = 0,
+      Z_dec_42 = 1,
+      Z_dec_22 = 2,
+      MAX_NUMBER_OF_Z_DECAYS
+   };
+   
+   enum tt_decays
+   {
+      tt_dec_40 = 0,
+      tt_dec_41 = 1,
+      tt_dec_42 = 2,
+      tt_dec_22 = 3,
+      MAX_NUMBER_OF_tt_DECAYS
+   };
+   
+   enum Z1_match_status
+   {
+      Z1_0 = 0,
+      Z1_1 = 1,
+      Z1_2 = 2,
+      Z1_3 = 3,
+      MAX_NUMBER_OF_Z1_MATCH_STATUSES
+   };
 
-   static const int num_of_gen_channels        = MAX_NUM_OF_GEN_CHANNELS;
-   static const int num_of_reco_channels       = MAX_NUM_OF_RECO_CHANNELS;
-   static const int num_of_production_modes    = MAX_NUM_OF_PRODUCTION_MODES;
-   static const int num_of_processes           = MAX_NUM_OF_PROCESSES;
-   static const int num_of_final_states        = MAX_NUM_OF_FINAL_STATES;
-   static const int num_of_categories          = MAX_NUM_OF_CATEGORIES;
-   static const int num_of_sorted_objects      = MAX_NUM_OF_SORTED_OBJECTS;
-   static const int num_of_associated_decays   = MAX_NUM_OF_ASSOCIATED_DECAYS;
-   static const int num_of_variables           = MAX_NUMBER_OF_VARIABLES;
-   static const int num_of_variable_pairs      = MAX_NUMBER_OF_VARIABLE_PAIRS;
+   enum Z2_match_status
+   {
+      Z2_0 = 0,
+      Z2_1 = 1,
+      Z2_2 = 2,
+      Z2_3 = 3,
+      MAX_NUMBER_OF_Z2_MATCH_STATUSES
+   };
 
+   
+   static const int num_of_gen_ch                 = MAX_NUM_OF_GEN_CHANNELS;
+   static const int num_of_reco_ch                = MAX_NUM_OF_RECO_CHANNELS;
+   static const int num_of_production_modes       = MAX_NUM_OF_PRODUCTION_MODES;
+   static const int num_of_processes              = MAX_NUM_OF_PROCESSES;
+   static const int num_of_final_states           = MAX_NUM_OF_FINAL_STATES;
+   static const int num_of_categories             = MAX_NUM_OF_CATEGORIES;
+   static const int num_of_sorted_objects         = MAX_NUM_OF_SORTED_OBJECTS;
+   static const int num_of_associated_decays      = MAX_NUM_OF_ASSOCIATED_DECAYS;
+   static const int num_of_vars                   = MAX_NUMBER_OF_VARIABLES;
+   static const int num_of_variable_pairs         = MAX_NUMBER_OF_VARIABLE_PAIRS;
+   static const int num_of_H_lep_match_statuses   = MAX_NUMBER_OF_H_LEP_MATCH_STATUSES;
+   static const int num_of_all_lep_match_statuses = MAX_NUMBER_OF_ALL_LEP_MATCH_STATUSES;
+   static const int num_of_WH_lep_match_statuses  = MAX_NUMBER_OF_WH_LEP_MATCH_STATUSES;
+   static const int num_of_ZH_lep_match_statuses  = MAX_NUMBER_OF_ZH_LEP_MATCH_STATUSES;
+   static const int num_of_ttH_lep_match_statuses = MAX_NUMBER_OF_TTH_LEP_MATCH_STATUSES;
+   static const int num_of_W_decays               = MAX_NUMBER_OF_W_DECAYS;
+   static const int num_of_Z_decays               = MAX_NUMBER_OF_Z_DECAYS;
+   static const int num_of_tt_decays              = MAX_NUMBER_OF_tt_DECAYS;
+
+   static const int num_of_Z1_match_statuses      = MAX_NUMBER_OF_Z1_MATCH_STATUSES;
+   static const int num_of_Z2_match_statuses      = MAX_NUMBER_OF_Z2_MATCH_STATUSES;   
 };
 #endif
