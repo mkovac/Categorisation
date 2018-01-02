@@ -17,7 +17,7 @@ class ROC
 public:
    ROC();
    ~ROC();
-   void Fill( TString, float , int , int , float , bool );
+   void Prepare( TString, float , int , int , float , bool );
    void Clean();
 
 

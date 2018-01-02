@@ -51,88 +51,6 @@ Histograms::Histograms( float lumi)
    s_reco_ch_.push_back("reco_ch_2_def");
    s_reco_ch_.push_back("reco_ch_3_def");
    
-   
-   // Variables
-   s_variable_.push_back("M4l");
-   s_variable_.push_back("M4l2");
-   s_variable_.push_back("MZ1");
-   s_variable_.push_back("MZ2");
-   s_variable_.push_back("Dkinbkg");
-   s_variable_.push_back("DjetFisher");
-   s_variable_.push_back("Pvbf");
-   s_variable_.push_back("Phjj");
-   s_variable_.push_back("Pvbf1j");
-   s_variable_.push_back("Phj");
-   s_variable_.push_back("Pwhhadr");
-   s_variable_.push_back("Pzhhadr");
-   s_variable_.push_back("Pwhlept");
-   s_variable_.push_back("Pzhlept");
-   s_variable_.push_back("D2jVbfHjj");
-   s_variable_.push_back("D1jVbfHj");
-   s_variable_.push_back("D2jWHHadrHjj");
-   s_variable_.push_back("D2jZHHadrHjj");
-   s_variable_.push_back("Pqj1");
-   s_variable_.push_back("Pgj1");
-   s_variable_.push_back("Pqj1Pqj2");
-   s_variable_.push_back("Pgj1Pgj2");
-   s_variable_.push_back("D2jqg");
-   s_variable_.push_back("Dqgj1Dqgj2");
-   s_variable_.push_back("Pqj1VbfTopo");
-   s_variable_.push_back("Pgj1VbfTopo");
-   s_variable_.push_back("Pqj1Pqj2VbfTopo");
-   s_variable_.push_back("Pgj1Pgj2VbfTopo");
-   s_variable_.push_back("D2jqgVbfTopo");
-   s_variable_.push_back("Pq");
-   s_variable_.push_back("Pg");
-   s_variable_.push_back("D1jqg");
-   s_variable_.push_back("D2jMelaQGVbfHjj");
-   s_variable_.push_back("D2jMelaD2jQGVbfHjj");
-   s_variable_.push_back("D1jMelaQGVbfHj");
-   s_variable_.push_back("D1jMelaD1jQGVbfHj");
-   s_variable_.push_back("D2jMelaQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaD2jQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaQGZHHadrHjj");
-   s_variable_.push_back("D2jMelaD2jQGZHHadrHjj");
-   s_variable_.push_back("RatioPvbfPhjj");
-   s_variable_.push_back("RatioPqj1Pqj2Pgj1Pgj2");
-   s_variable_.push_back("RatioPvbfPqj1Pqj2PhjjPgj1Pgj2");
-   s_variable_.push_back("D2jMelaExpQGVbfHjj");
-   s_variable_.push_back("D2jMelaSqQGVbfHjj");
-   s_variable_.push_back("D2jMelaSqrtQGVbfHjj");
-   s_variable_.push_back("D2jMelaCbrtQGVbfHjj");
-   s_variable_.push_back("D2jMelaQrrtQGVbfHjj");
-   s_variable_.push_back("D2jMelaQnrtQGVbfHjj");
-   s_variable_.push_back("D1jMelaSqrtQGVbfHj");
-   s_variable_.push_back("D1jMelaCbrtQGVbfHj");
-   s_variable_.push_back("D1jMelaQrrtQGVbfHj");
-   s_variable_.push_back("D1jMelaQnrtQGVbfHj");
-   s_variable_.push_back("D2jMelaSqrtQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaCbrtQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaQrrtQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaQnrtQGWHHadrHjj");
-   s_variable_.push_back("D2jMelaSqrtQGZHHadrHjj");
-   s_variable_.push_back("D2jMelaCbrtQGZHHadrHjj");
-   s_variable_.push_back("D2jMelaQrrtQGZHHadrHjj");
-   s_variable_.push_back("D2jMelaQnrtQGZHHadrHjj");
-   s_variable_.push_back("Pt4l");
-   s_variable_.push_back("NGenLep");
-   s_variable_.push_back("NGenLepInEtaPtAcc");
-   s_variable_.push_back("NGenLepNotInEtaPtAcc");
-   s_variable_.push_back("NGenHLepNotInEtaPtAcc");
-   s_variable_.push_back("NGenAssocLepNotInEtaPtAcc");
-   s_variable_.push_back("NGenLepMinusNGoodLep");
-   s_variable_.push_back("NGenLepInEtaPtAccMinusNGoodLep");
-   s_variable_.push_back("NExtraLep");
-   s_variable_.push_back("NExtraZ");
-   s_variable_.push_back("NJets");
-   s_variable_.push_back("NBtaggedJets");
-   s_variable_.push_back("MET");
-   
-   // Variable pairs
-   s_variable_pair_.push_back("M4l_vs_Dkinbkg");
-   s_variable_pair_.push_back("MZ2_vs_Dkinbkg");
-   s_variable_pair_.push_back("D2jVbfHjj_vs_D2jqg");
-   
    // Decays
    s_variable_decay_.push_back("H_to_any");
    s_variable_decay_.push_back("H_to_4l");
@@ -182,183 +100,89 @@ Histograms::Histograms( float lumi)
    s_ttH_lep_match_status_.push_back("ttH_le_4");
    s_ttH_lep_match_status_.push_back("ambiguity");
    
-   
-   TString varLabel[74] = {
-      "m_{4#font[12]{l}} (GeV)",
-      "m_{4#font[12]{l}} (GeV)",
-      "m_{Z_{1}} (GeV)",
-      "m_{Z_{2}} (GeV)",
-      "D_{bkg}^{kin}",
-      "D^{Fisher}",
-      "P_{VBF}^{MELA}",
-      "P_{ggH+2j}^{MELA}",
-      "P_{VBF 1j}^{MELA}",
-      "P_{ggH+1j}^{MELA}",
-      "P_{WH-h}^{MELA}",
-      "P_{ZH-h}^{MELA}",
-      "P_{WH-l}^{MELA}",
-      "P_{ZH-l}^{MELA}",
-      "D_{VBF-2j}^{ME}",
-      "D_{VBF-1j}^{ME}",
-      "D_{WH-hadr.}^{ME}",
-      "D_{ZH-hadr.}^{ME}",
-      "P_{q}(j_{1})",
-      "P_{g}(j_{1})",
-      "P_{q}(j_{1})*P_{q}(j_{2})",
-      "P_{g}(j_{1})*P_{g}(j_{2})",
-      "D_{2jets}^{q/g}",
-      "D_{1jet}^{q/g}(j_{1})*D_{1jet}^{q/g}(j_{2})",
-      "P_{q}(j_{1})",
-      "P_{g}(j_{1})",
-      "P_{q}(j_{1})*P_{q}(j_{2})",
-      "P_{g}(j_{1})*P_{g}(j_{2})",
-      "D_{2jets}^{q/g}",
-      "P_{q}",
-      "P_{g}",
-      "D_{1jet}^{q/g}",
-      "D_{VBF-2j}^{ME, q/g}",
-      "D_{VBF-2j}^{ME}*D_{2jets}^{q/g}",
-      "D_{VBF-1j}^{ME, q/g}",
-      "D_{VBF-1j}^{ME}*D_{1jet}^{q/g}",
-      "D_{WH-hadr.}^{ME, q/g}",
-      "D_{WH-hadr.}^{ME}*D_{2jets}^{q/g}",
-      "D_{ZH-hadr.}^{ME, q/g}",
-      "D_{ZH-hadr.}^{ME}*D_{2jets}^{q/g}",
-      "P_{VBF}^{MELA} / P_{ggH+2j}^{MELA}",
-      "[P_{q}(j_{1})*P_{q}(j_{2})] / [P_{g}(j_{1})*P_{g}(j_{2})]",
-      "[P_{VBF}^{MELA}*P_{q}(j_{1})*P_{q}(j_{2})] / [P_{ggH+2j}^{MELA}*P_{g}(j_{1})*P_{g}(j_{2})]",
-      "D_{VBF-2j}^{ME, exp(q/g)}",
-      "D_{VBF-2j}^{ME, (q/g)^2}",
-      "D_{VBF-2j}^{ME, (q/g)^(1/2)}",
-      "D_{VBF-2j}^{ME, (q/g)^(1/3)}",
-      "D_{VBF-2j}^{ME, (q/g)^(1/4)}",
-      "D_{VBF-2j}^{ME, (q/g)^(1/5)}",
-      "D_{VBF-1j}^{ME, (q/g)^(1/2)}",
-      "D_{VBF-1j}^{ME, (q/g)^(1/3)}",
-      "D_{VBF-1j}^{ME, (q/g)^(1/4)}",
-      "D_{VBF-1j}^{ME, (q/g)^(1/5)}",
-      "D_{WH-hadr.}^{ME, (q/g)^(1/2)}",
-      "D_{WH-hadr.}^{ME, (q/g)^(1/3)}",
-      "D_{WH-hadr.}^{ME, (q/g)^(1/4)}",
-      "D_{WH-hadr.}^{ME, (q/g)^(1/5)}",
-      "D_{ZH-hadr.}^{ME, (q/g)^(1/2)}",
-      "D_{ZH-hadr.}^{ME, (q/g)^(1/3)}",
-      "D_{ZH-hadr.}^{ME, (q/g)^(1/4)}",
-      "D_{ZH-hadr.}^{ME, (q/g)^(1/5)}",
-      "p_{T}^{4l} (GeV)",
-      "# gen leptons",
-      "# gen leptons in acceptance",
-      "# gen leptons not in acceptance",
-      "# gen leptons from H not in acceptance",
-      "# gen associated leptons not in acceptance",
-      "# gen leptons - # good leptons",
-      "# gen leptons in acceptance - # good leptons",
-      "number of additional leptons",//"# extra leptons",
-      "number of additional #font[12]{l}^{+}#font[12]{l}^{-} pairs",//"# extra #font[12]{l}^{+}#font[12]{l}^{-} pairs",
-      "number of selected jets",//"# jets",
-      "number of selected b-tagged jets",//"# b-tagged jets",
-      "E_{T}^{miss.}",
-};
+   //Prepare variable pairs
+   var_pair.PrepareVarPair("M4l_vs_D_kin_bkg","m_{4#font[12]{l}} (GeV)", "D_{bkg}^{kin}", 100, 50, 850, 20, 0, 1);
+   var_pair.PrepareVarPair("MZ2_vs_D_kin_bkg", "m_{Z_{2}} (GeV)", "D_{bkg}^{kin}", 75, 0, 150, 20, 0, 1);
+   var_pair.PrepareVarPair("D2jVbfHjj_vs_D2jqg", "D_{VBF-2j}^{ME}", "D_{2jets}^{q/g}", 51, 0, 1.02, 25, -0.04, 0.96);
 
-// Variables histos number of bins, min, and max
-   get<0>(tpl_) = 100; get<1>(tpl_) = 50;    get<2>(tpl_) = 850;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 70;  get<1>(tpl_) = 105;   get<2>(tpl_) = 140;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 75;  get<1>(tpl_) = 0;     get<2>(tpl_) = 150;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 75;  get<1>(tpl_) = 0;     get<2>(tpl_) = 150;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 20;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = 0;     get<2>(tpl_) = 2;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -2;    get<2>(tpl_) = 98;   var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -5;    get<2>(tpl_) = 245;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -10;   get<2>(tpl_) = 490;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -10;   get<2>(tpl_) = 490;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -10;   get<2>(tpl_) = 490;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -10;   get<2>(tpl_) = 490;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -1;    get<2>(tpl_) = 49;   var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = -1;    get<2>(tpl_) = 49;   var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 26;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.04; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 25;  get<1>(tpl_) = -0.04; get<2>(tpl_) = 0.96; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = 0;     get<2>(tpl_) = 5;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = 0;     get<2>(tpl_) = 5;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = 0;     get<2>(tpl_) = 5;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 51;  get<1>(tpl_) = 0;     get<2>(tpl_) = 1.02; var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 50;  get<1>(tpl_) = 0;     get<2>(tpl_) = 500;  var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 7;   get<1>(tpl_) = 0;     get<2>(tpl_) = 7;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 7;   get<1>(tpl_) = 0;     get<2>(tpl_) = 7;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 7;   get<1>(tpl_) = 0;     get<2>(tpl_) = 7;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 5;   get<1>(tpl_) = 0;     get<2>(tpl_) = 5;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 3;   get<1>(tpl_) = 0;     get<2>(tpl_) = 3;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 6;   get<1>(tpl_) = -3;    get<2>(tpl_) = 3;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 6;   get<1>(tpl_) = -3;    get<2>(tpl_) = 3;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 6;   get<1>(tpl_) = 0;     get<2>(tpl_) = 6;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 4;   get<1>(tpl_) = 0;     get<2>(tpl_) = 4;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 15;  get<1>(tpl_) = 0;     get<2>(tpl_) = 15;   var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 6;   get<1>(tpl_) = 0;     get<2>(tpl_) = 6;    var_bins_min_max_.push_back(tpl_);
-   get<0>(tpl_) = 100; get<1>(tpl_) = 0;     get<2>(tpl_) = 200;  var_bins_min_max_.push_back(tpl_);
+   //Prepare variables
+   variable.PrepareVar("M4l", "m_{4#font[12]{l}} (GeV)", 100, 50, 85);
+   variable.PrepareVar("M4l2", "m_{4#font[12]{l}} (GeV)", 70, 105, 140);
+   variable.PrepareVar("MZ1", "m_{Z_{1}} (GeV)", 75, 0, 150);
+   variable.PrepareVar("MZ2", "m_{Z_{2}} (GeV)", 75, 0, 150);
+   variable.PrepareVar("Dkinbkg", "D_{bkg}^{kin}", 20, 0, 1);
+   variable.PrepareVar("DjetFisher", "D^{Fisher}", 50, 0, 2);
+   variable.PrepareVar("Pvbf", "P_{VBF}^{MELA}", 50, -2, 98);
+   variable.PrepareVar("Phjj", "P_{ggH+2j}^{MELA}", 50, -5, 245);
+   variable.PrepareVar("Pvbf1j", "P_{VBF 1j}^{MELA}", 50, -10, 490);
+   variable.PrepareVar("Phj", "P_{ggH+1j}^{MELA}", 50, -10, 490);
+   variable.PrepareVar("Pwhhadr", "P_{WH-h}^{MELA}", 50, -10, 490);
+   variable.PrepareVar("Pzhhadr", "P_{ZH-h}^{MELA}", 50, -10, 490);
+   variable.PrepareVar("Pwhlept", "P_{WH-l}^{MELA}", 50, -1, 49);
+   variable.PrepareVar("Pzhlept", "P_{ZH-l}^{MELA}", 50, -1, 49);
+   variable.PrepareVar("D2jVbfHjj", "D_{VBF-2j}^{ME}", 51, 0, 1.02);
+   variable.PrepareVar("D1jVbfHj", "D_{VBF-1j}^{ME}", 51, 0, 1.02);
+   variable.PrepareVar("D2jWHHadrHjj", "D_{WH-hadr.}^{ME}", 51, 0, 1.02);
+   variable.PrepareVar("D2jZHHadrHjj", "D_{ZH-hadr.}^{ME}", 51, 0, 1.02);
+   variable.PrepareVar("Pqj1", "P_{q}(j_{1})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pgj1", "P_{g}(j_{1})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pqj1Pqj2", "P_{q}(j_{1})*P_{q}(j_{2})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pgj1Pgj2", "P_{g}(j_{1})*P_{g}(j_{2})", 25, -0.04, 0.96);
+   variable.PrepareVar("D2jqg", "D_{2jets}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("Dqgj1Dqgj2", "D_{1jet}^{q/g}(j_{1})*D_{1jet}^{q/g}(j_{2})", 51, 0, 1.02);
+   variable.PrepareVar("Pqj1VbfTopo", "P_{q}(j_{1})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pgj1VbfTopo", "P_{g}(j_{1})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pqj1Pqj2VbfTopo", "P_{q}(j_{1})*P_{q}(j_{2})", 25, -0.04, 0.96);
+   variable.PrepareVar("Pgj1Pgj2VbfTopo", "P_{g}(j_{1})*P_{g}(j_{2})", 25, -0.04, 0.96);
+   variable.PrepareVar("D2jqgVbfTopo", "D_{2jets}^{q/g}", 26, 0, 1.04);
+   variable.PrepareVar("Pq", "P_{q}", 25, -0.04, 0.96);
+   variable.PrepareVar("Pg", "P_{g}", 25, -0.04, 0.96);
+   variable.PrepareVar("D1jqg", "D_{1jet}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQGVbfHjj", "D_{VBF-2j}^{ME q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaD2jQGVbfHjj", "D_{VBF-2j}^{ME}*D_{2jets}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaQGVbfHj", "D_{VBF-1j}^{ME q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaD1jQGVbfHj", "D_{VBF-1j}^{ME}*D_{1jet}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQGWHHadrHjj", "D_{WH-hadr.}^{ME q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaD2jQGWHHadrHjj", "D_{WH-hadr.}^{ME}*D_{2jets}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQGZHHadrHjj", "D_{ZH-hadr.}^{ME q/g}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaD2jQGZHHadrHjj", "D_{ZH-hadr.}^{ME}*D_{2jets}^{q/g}", 51, 0, 1.02);
+   variable.PrepareVar("RatioPvbfPhjj", "P_{VBF}^{MELA} / P_{ggH+2j}^{MELA}", 50, 0, 5);
+   variable.PrepareVar("RatioPqj1Pqj2Pgj1Pgj2", "[P_{q}(j_{1})*P_{q}(j_{2})] / [P_{g}(j_{1})*P_{g}(j_{2})]", 50, 0, 5);
+   variable.PrepareVar("RatioPvbfPqj1Pqj2PhjjPgj1Pgj2", "[P_{VBF}^{MELA}*P_{q}(j_{1})*P_{q}(j_{2})] / [P_{ggH+2j}^{MELA}*P_{g}(j_{1})*P_{g}(j_{2})]", 50, 0, 5);
+   variable.PrepareVar("D2jMelaExpQGVbfHjj", "D_{VBF-2j}^{ME exp(q/g)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaSqQGVbfHjj", "D_{VBF-2j}^{ME (q/g)^2}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaSqrtQGVbfHjj", "D_{VBF-2j}^{ME (q/g)^(1/2)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaCbrtQGVbfHjj", "D_{VBF-2j}^{ME (q/g)^(1/3)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQrrtQGVbfHjj", "D_{VBF-2j}^{ME (q/g)^(1/4)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQnrtQGVbfHjj", "D_{VBF-2j}^{ME (q/g)^(1/5)}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaSqrtQGVbfHj", "D_{VBF-1j}^{ME (q/g)^(1/2)}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaCbrtQGVbfHj", "D_{VBF-1j}^{ME (q/g)^(1/3)}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaQrrtQGVbfHj", "D_{VBF-1j}^{ME (q/g)^(1/4)}", 51, 0, 1.02);
+   variable.PrepareVar("D1jMelaQnrtQGVbfHj", "D_{VBF-1j}^{ME (q/g)^(1/5)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaSqrtQGWHHadrHjj", "D_{WH-hadr.}^{ME (q/g)^(1/2)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaCbrtQGWHHadrHjj", "D_{WH-hadr.}^{ME (q/g)^(1/3)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQrrtQGWHHadrHjj", "D_{WH-hadr.}^{ME (q/g)^(1/4)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQnrtQGWHHadrHjj", "D_{WH-hadr.}^{ME (q/g)^(1/5)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaSqrtQGZHHadrHjj", "D_{ZH-hadr.}^{ME (q/g)^(1/2)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaCbrtQGZHHadrHjj", "D_{ZH-hadr.}^{ME (q/g)^(1/3)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQrrtQGZHHadrHjj", "D_{ZH-hadr.}^{ME (q/g)^(1/4)}", 51, 0, 1.02);
+   variable.PrepareVar("D2jMelaQnrtQGZHHadrHjj", "D_{ZH-hadr.}^{ME (q/g)^(1/5)}", 51, 0, 1.02);
+   variable.PrepareVar("Pt4l", "p_{T}^{4l} (GeV)", 50, 0, 500);
+   variable.PrepareVar("NGenLep", "# gen leptons", 7, 0, 7);
+   variable.PrepareVar("NGenLepInEtaPtAcc", "# gen leptons in acceptance", 7, 0, 7);
+   variable.PrepareVar("NGenLepNotInEtaPtAcc", "# gen leptons not in acceptance", 7, 0, 7);
+   variable.PrepareVar("NGenHLepNotInEtaPtAcc", "# gen leptons from H not in acceptance", 5, 0, 5);
+   variable.PrepareVar("NGenAssocLepNotInEtaPtAcc", "# gen associated leptons not in acceptance", 3, 0, 3);
+   variable.PrepareVar("NGenLepMinusNGoodLep", "# gen leptons - # good leptons", 6, -3, 3);
+   variable.PrepareVar("NGenLepInEtaPtAccMinusNGoodLep", "# gen leptons in acceptance - # good leptons", 6, -3, 3);
+   variable.PrepareVar("NExtraLep", "number of additional leptons", 6, 0, 6);
+   variable.PrepareVar("NExtraZ", "number of additional #font[12]{l}^{+}#font[12]{l}^{-} pairs", 4, 0, 4);
+   variable.PrepareVar("NJets", "number of selected jets", 15, 0, 15);
+   variable.PrepareVar("NBtaggedJets", "number of selected b-tagged jets", 6, 0, 6);
+   variable.PrepareVar("MET", "E_{T}^{miss.}", 100, 0, 200);
 
-
-//   _s_final_state.push_back("4e");
-//   _s_final_state.push_back("4mu");
-//   _s_final_state.push_back("2e2mu");
-//   _s_final_state.push_back("2mu2e");
-//   _s_final_state.push_back("4l");
-//
-//   _s_category.push_back("UnTagged");
-//   _s_category.push_back("VBF1jTagged");
-//   _s_category.push_back("VBF2jTagged");
-//   _s_category.push_back("VHLeptTagged");
-//   _s_category.push_back("VHHadrTagged");
-//   _s_category.push_back("ttHTagged");
-//   _s_category.push_back("VHMETTagged");
-//   _s_category.push_back("Inclusive");
-//
-//   _s_production_mode.push_back("ggH");
-//   _s_production_mode.push_back("qqH");
-//   _s_production_mode.push_back("WH");
-//   _s_production_mode.push_back("ZH");
-//   _s_production_mode.push_back("ttH");
    
-   
+   // Prepare histograms
    for ( int i_proc = 0; i_proc < Counters::num_of_processes; i_proc++ )
    {
       histo_name_ = "h_gen_H_pt_" + s_process_.at(i_proc);
@@ -377,77 +201,84 @@ Histograms::Histograms( float lumi)
       {
          for ( int i_var = 0; i_var < Counters::num_of_vars; i_var++ )
          {
-            histo_label_ = ";" + varLabel[i_var] + ";" + "# of events";
+            histo_label_ = ";" + variable.vec_var[i_var].label + ";" + "# of events";
 
-            histo_name_ = "h_bc_in_sig_reg_" + s_variable_.at(i_var) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            h_bc_in_sig_reg_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                    get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+            histo_name_ = "h_bc_in_sig_reg_" + variable.vec_var[i_var].name + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+            h_bc_in_sig_reg_[i_var][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                        variable.vec_var[i_var].x_min,
+                                                                                        variable.vec_var[i_var].x_max);
             
             for ( int i_ms = 0; i_ms < Counters::num_of_H_lep_match_statuses; i_ms++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_match_H_leps_" + s_variable_.at(i_var) + "_" + s_H_lep_match_status_.at(i_ms) + "_"
+               histo_name_ = "h_bc_in_sig_reg_match_H_leps_" + variable.vec_var[i_var].name + "_" + s_H_lep_match_status_.at(i_ms) + "_"
                                                              + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-               h_bc_in_sig_reg_match_H_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                          get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+               h_bc_in_sig_reg_match_H_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                                              variable.vec_var[i_var].x_min,
+                                                                                                              variable.vec_var[i_var].x_max);
             }
             
             for ( int i_ms = 0; i_ms < Counters::num_of_all_lep_match_statuses; i_ms++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_match_all_leps_" + s_variable_.at(i_var) + "_" + s_all_lep_match_status_.at(i_ms) + "_"
+               histo_name_ = "h_bc_in_sig_reg_match_all_leps_" + variable.vec_var[i_var].name + "_" + s_all_lep_match_status_.at(i_ms) + "_"
                                                                + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-               h_bc_in_sig_reg_match_all_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                            get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+               h_bc_in_sig_reg_match_all_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                                                variable.vec_var[i_var].x_min,
+                                                                                                                variable.vec_var[i_var].x_max);
             }
             
             for ( int i_ms = 0; i_ms < Counters::num_of_WH_lep_match_statuses; i_ms++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_match_WH_leps_" + s_variable_.at(i_var) + "_" + s_WH_lep_match_status_.at(i_ms) + "_"
+               histo_name_ = "h_bc_in_sig_reg_match_WH_leps_" + variable.vec_var[i_var].name + "_" + s_WH_lep_match_status_.at(i_ms) + "_"
                                                               + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-               h_bc_in_sig_reg_match_WH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                           get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+               h_bc_in_sig_reg_match_WH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                                               variable.vec_var[i_var].x_min,
+                                                                                                               variable.vec_var[i_var].x_max);
             }
             
             for ( int i_ms = 0; i_ms < Counters::num_of_ZH_lep_match_statuses; i_ms++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_match_ZH_leps_" + s_variable_.at(i_var) + "_" + s_ZH_lep_match_status_.at(i_ms) + "_"
+               histo_name_ = "h_bc_in_sig_reg_match_ZH_leps_" + variable.vec_var[i_var].name + "_" + s_ZH_lep_match_status_.at(i_ms) + "_"
                                                               + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-               h_bc_in_sig_reg_match_ZH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                           get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+               h_bc_in_sig_reg_match_ZH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                                               variable.vec_var[i_var].x_min,
+                                                                                                               variable.vec_var[i_var].x_max);
             }
             
             for ( int i_ms = 0; i_ms < Counters::num_of_ttH_lep_match_statuses; i_ms++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_match_ttH_leps_" + s_variable_.at(i_var) + "_" + s_ttH_lep_match_status_.at(i_ms) + "_"
+               histo_name_ = "h_bc_in_sig_reg_match_ttH_leps_" + variable.vec_var[i_var].name + "_" + s_ttH_lep_match_status_.at(i_ms) + "_"
                                                                + s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-               h_bc_in_sig_reg_match_ttH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, get<0>(var_bins_min_max_.at(i_var)),
-                                                                            get<1>(var_bins_min_max_.at(i_var)), get<2>(var_bins_min_max_.at(i_var)));
+               h_bc_in_sig_reg_match_ttH_leps_[i_var][i_ms][i_proc][i_rc] = new TH1F(histo_name_, histo_label_, variable.vec_var[i_var].n_bins,
+                                                                                                                variable.vec_var[i_var].x_min,
+                                                                                                                variable.vec_var[i_var].x_max);
             }
          } // end i_var
          
          // Variable pairs histograms
          for ( int i_var_pair = 0; i_var_pair < Counters::num_of_variable_pairs; i_var_pair++ )
          {
-            histo_name_ = "h_bc_in_sig_reg_2D_" + s_variable_pair_.at(i_var_pair) + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
-            histo_label_ = ";" + var_pairs.vec_var_pairs[i_var_pair].x_label + ";" + var_pairs.vec_var_pairs[i_var_pair].y_label;
+            histo_name_ = "h_bc_in_sig_reg_2D_" + var_pair.vec_var_pair[i_var_pair].name + "_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+            histo_label_ = ";" + var_pair.vec_var_pair[i_var_pair].x_label + ";" + var_pair.vec_var_pair[i_var_pair].y_label;
 //            if ( histo_name_.Contains("ggH") ) cout << histo_name_ << endl;
-            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc] = new TH2F(histo_name_, histo_label_, var_pairs.vec_var_pairs[i_var_pair].x_bins,
-                                                                                                var_pairs.vec_var_pairs[i_var_pair].x_min,
-                                                                                                var_pairs.vec_var_pairs[i_var_pair].x_max,
-                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_bins,
-                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_min,
-                                                                                                var_pairs.vec_var_pairs[i_var_pair].y_max);
+            h_bc_in_sig_reg_2D_[i_var_pair][i_proc][i_rc] = new TH2F(histo_name_, histo_label_, var_pair.vec_var_pair[i_var_pair].x_bins,
+                                                                                                var_pair.vec_var_pair[i_var_pair].x_min,
+                                                                                                var_pair.vec_var_pair[i_var_pair].x_max,
+                                                                                                var_pair.vec_var_pair[i_var_pair].y_bins,
+                                                                                                var_pair.vec_var_pair[i_var_pair].y_min,
+                                                                                                var_pair.vec_var_pair[i_var_pair].y_max);
             
             for ( int i_decay = 0; i_decay < 5; i_decay++ )
             {
-               histo_name_ = "h_bc_in_sig_reg_2D_decays_" + s_variable_pair_.at(i_var_pair) + "_" +  s_process_.at(i_proc) + "_" + s_variable_decay_.at(i_decay) + "_" + s_reco_ch_.at(i_rc);
-               histo_label_ = ";" + var_pairs.vec_var_pairs[i_var_pair].x_label + ";" + var_pairs.vec_var_pairs[i_var_pair].y_label;
+               histo_name_ = "h_bc_in_sig_reg_2D_decays_" + var_pair.vec_var_pair[i_var_pair].name + "_" +  s_process_.at(i_proc) + "_"
+                                                          + s_variable_decay_.at(i_decay) + "_" + s_reco_ch_.at(i_rc);
+               histo_label_ = ";" + var_pair.vec_var_pair[i_var_pair].x_label + ";" + var_pair.vec_var_pair[i_var_pair].y_label;
 //               if ( histo_name_.Contains("ggH") ) cout << histo_name_ << endl;
-               h_bc_in_sig_reg_2D_decays_[i_var_pair][i_proc][i_decay][i_rc] = new TH2F(histo_name_, histo_label_, var_pairs.vec_var_pairs[i_var_pair].x_bins,
-                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].x_min,
-                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].x_max,
-                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_bins,
-                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_min,
-                                                                                                                   var_pairs.vec_var_pairs[i_var_pair].y_max);
+               h_bc_in_sig_reg_2D_decays_[i_var_pair][i_proc][i_decay][i_rc] = new TH2F(histo_name_, histo_label_, var_pair.vec_var_pair[i_var_pair].x_bins,
+                                                                                                                   var_pair.vec_var_pair[i_var_pair].x_min,
+                                                                                                                   var_pair.vec_var_pair[i_var_pair].x_max,
+                                                                                                                   var_pair.vec_var_pair[i_var_pair].y_bins,
+                                                                                                                   var_pair.vec_var_pair[i_var_pair].y_min,
+                                                                                                                   var_pair.vec_var_pair[i_var_pair].y_max);
             } // end i_decay
          } // end i_var_pair
       } // end i_rc
@@ -495,6 +326,16 @@ Histograms::Histograms( float lumi)
          } // end i_sort
       } // end i_gc
    } // end i_proc
+   
+   
+//   for ( int i_roc = 0; i_roc < Counters::num_of_ROCs; i_roc++ )
+//   {
+//      histo_name_ = "h_ROC_sig_" + s_ROC_.at(i_roc);
+//      histo_label_ = ";" + Variables::eta().var_X_label + ";" + Variables::eta().var_Y_label;
+//      h_ROC_sig_[i_roc] = new TH1F(histo_name_, histo_label_, Variables::eta().var_N_bin,
+//                                                                        Variables::eta().var_min, Variables::eta().var_max);
+//      
+//   }
    
    
    

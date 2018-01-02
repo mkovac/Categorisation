@@ -17,11 +17,8 @@ class Variables
 public:
    Variables();
    ~Variables();
-
-   
-//====
-// pt
-//====
+   void PrepareVarPair( TString, TString, TString, int, int, int, int, int, int );
+   void PrepareVar( TString, TString, int, int, int );
    
    struct pt
    {
@@ -94,12 +91,13 @@ public:
    };
 
 
-//====
-// 2D
-//====
+//===============
+// Variable pairs
+//===============
   
    struct variable_pairs
    {
+      TString name;
       TString x_label;
       TString y_label;
       TString cut_label;
@@ -111,7 +109,25 @@ public:
       float y_max;
    };
    
-   vector<variable_pairs> vec_var_pairs;
+   vector<variable_pairs> vec_var_pair;
+   variable_pairs temp_var_pair;
 
+
+//==========
+// Variables
+//==========
+  
+   struct variables
+   {
+      TString name;
+      TString label;
+      TString cut_label;
+      int n_bins;
+      float x_min;
+      float x_max;
+   };
+
+   vector<variables> vec_var;
+   variables temp_variable;
 };
 #endif

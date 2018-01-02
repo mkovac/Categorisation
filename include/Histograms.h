@@ -81,14 +81,12 @@ private:
       
    float lumi_;
    TString histo_name_, histo_label_;
-   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_pair_, s_variable_decay_;
+   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_decay_;
    vector<TString> s_H_lep_match_status_, s_all_lep_match_status_, s_WH_lep_match_status_, s_ZH_lep_match_status_, s_ttH_lep_match_status_;
    
-   vector<tuple<int, float, float>> var_bins_min_max_;
-
-   tuple<int, float, float> tpl_;
+   vector<Counters::variable> ROC_to_variables;
    
-   Variables var_pairs;
+   Variables var_pair, variable;
    
 //==============
 // 1D histograms
@@ -114,7 +112,12 @@ private:
    TH1F* h_bc_in_sig_reg_match_ZH_leps_[Counters::num_of_vars][Counters::num_of_ZH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
    TH1F* h_bc_in_sig_reg_match_ttH_leps_[Counters::num_of_vars][Counters::num_of_ttH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
 
+//   TH1F* h_ROC_sig_[Counters::num_of_ROCs];
 
+
+//==============
+// 2D histograms
+//==============
    TH2F* h_bc_in_sig_reg_2D_[Counters::num_of_variable_pairs][Counters::num_of_processes][Counters::num_of_reco_ch];
    TH2F* h_bc_in_sig_reg_2D_decays_[Counters::num_of_variable_pairs][Counters::num_of_processes][5][Counters::num_of_reco_ch];
 

@@ -1797,10 +1797,10 @@ void Categorisation::FillHistograms()
 //=============================
 void Categorisation::MakeROCs()
 {
-   roc->Fill( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
-   roc->Fill( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
-   roc->Fill( "Pvbf", Pvbf, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
-   roc->Fill( "Pvbf", Pvbf, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
+   roc->Prepare( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
+   roc->Prepare( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
+   roc->Prepare( "Pvbf", Pvbf, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
+   roc->Prepare( "Pvbf", Pvbf, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
    
    for ( vector<ROC::ROCs>::iterator it = roc->vec_ROCs.begin(); it != roc->vec_ROCs.end(); it++ )
    {
@@ -1817,7 +1817,7 @@ void Categorisation::MakeROCs()
 
    }
    
-//   cout << roc->vec_ROCs.at(2).var_value << " " << roc->vec_ROCs.at(2).jet_cut << endl;
+//   cout << ROC::vec_ROCs.at(2).var_value << " " << roc->vec_ROCs.at(2).jet_cut << endl;
 }
 //=============================
 

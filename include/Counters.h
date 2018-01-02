@@ -302,6 +302,89 @@ public:
       Z2_3 = 3,
       MAX_NUMBER_OF_Z2_MATCH_STATUSES
    };
+   
+//   enum ROC
+//   {
+//      DjetFisher_qqH_ggH,
+//      DjetFisher_qqH_qqZZ,
+//      Pvbf_qqH_ggH,
+//      Pvbf_qqH_qqZZ,
+//      Phjj_qqH_ggH,
+//      Phjj_qqH_qqZZ,
+//      Phjj_WH_ggH,
+//      Phjj_ZH_ggH,
+//      Pvbf1j_qqH_ggH,
+//      Phj_qqH_ggH,
+//      Pwhhadr_WH_ggH,
+//      Pzhhadr_ZH_ggH,
+//      D2jVbfHjj_qqH_ggH,
+//      D2jVbfHjj_qqH_qqZZ,
+//      D1jVbfHj_qqH_ggH,
+//      D2jWHHadrHjj_WH_ggH,
+//      D2jZHHadrHjj_ZH_ggH,
+//      Pqj1Pqj2_qqH_ggH,
+//      Pgj1Pgj2_qqH_ggH,
+//      D2jqg_qqH_ggH,
+//      Dqgj1Dqgj2_qqH_ggH,
+//      Dqgj1Dqgj2_qqH_ggH,
+//      Pqj1Pqj2_qqH_qqZZ,
+//      Pgj1Pgj2_qqH_qqZZ,
+//      D2jqg_qqH_qqZZ,
+//      Dqgj1Dqgj2_qqH_qqZZ,
+//      Dqgj1Dqgj2_qqH_qqZZ,
+//      Pq_qqH_ggH,
+//      Pg_qqH_ggH,
+//      D1jqg_qqH_ggH,
+//      D1jqg_qqH_ggH,
+//      Pqj1Pqj2_WH_ggH,
+//      Pgj1Pgj2_WH_ggH,
+//      D2jqg_WH_ggH,
+//      Dqgj1Dqgj2_WH_ggH,
+//      Dqgj1Dqgj2_WH_ggH,
+//      Pqj1Pqj2_ZH_ggH,
+//      Pgj1Pgj2_ZH_ggH,
+//      D2jqg_ZH_ggH,
+//      Dqgj1Dqgj2_ZH_ggH,
+//      Dqgj1Dqgj2_ZH_ggH,
+//      D2jMelaQGVbfHjj_qqH_ggH,
+//      D2jMelaD2jQGVbfHjj_qqH_ggH,
+//      D2jMelaQGVbfHjj_qqH_qqZZ,
+//      D2jMelaD2jQGVbfHjj_qqH_qqZZ,
+//      D1jMelaQGVbfHj_qqH_ggH,
+//      D1jMelaD1jQGVbfHj_qqH_ggH,
+//      D2jMelaQGWHHadrHjj_WH_ggH,
+//      D2jMelaD2jQGWHHadrHjj_WH_ggH,
+//      D2jMelaQGZHHadrHjj_ZH_ggH,
+//      D2jMelaD2jQGZHHadrHjj_ZH_ggH,
+//      RatioPvbfPhjj_qqH_ggH,
+//      RatioPqj1Pqj2Pgj1Pgj2_qqH_ggH,
+//      RatioPvbfPqj1Pqj2PhjjPgj1Pgj2_qqH_ggH,
+//      D2jMelaExpQGVbfHjj_qqH_ggH,
+//      D2jMelaSqQGVbfHjj_qqH_ggH,
+//      D2jMelaSqrtQGVbfHjj_qqH_ggH,
+//      D2jMelaCbrtQGVbfHjj_qqH_ggH,
+//      D2jMelaQrrtQGVbfHjj_qqH_ggH,
+//      D2jMelaQnrtQGVbfHjj_qqH_ggH,
+//      D2jMelaExpQGVbfHjj_qqH_qqZZ,
+//      D2jMelaSqQGVbfHjj_qqH_qqZZ,
+//      D2jMelaSqrtQGVbfHjj_qqH_qqZZ,
+//      D2jMelaCbrtQGVbfHjj_qqH_qqZZ,
+//      D2jMelaQrrtQGVbfHjj_qqH_qqZZ,
+//      D2jMelaQnrtQGVbfHjj_qqH_qqZZ,
+//      D1jMelaSqrtQGVbfHj_qqH_ggH,
+//      D1jMelaCbrtQGVbfHj_qqH_ggH,
+//      D1jMelaQrrtQGVbfHj_qqH_ggH,
+//      D1jMelaQnrtQGVbfHj_qqH_ggH,
+//      D2jMelaSqrtQGWHHadrHjj_WH_ggH,
+//      D2jMelaCbrtQGWHHadrHjj_WH_ggH,
+//      D2jMelaQrrtQGWHHadrHjj_WH_ggH,
+//      D2jMelaQnrtQGWHHadrHjj_WH_ggH,
+//      D2jMelaSqrtQGZHHadrHjj_ZH_ggH,
+//      D2jMelaCbrtQGZHHadrHjj_ZH_ggH,
+//      D2jMelaQrrtQGZHHadrHjj_ZH_ggH,
+//      D2jMelaQnrtQGZHHadrHjj_ZH_ggH,
+//      MAX_NUMBER_OF_ROCS
+//   };
 
    
    static const int num_of_gen_ch                 = MAX_NUM_OF_GEN_CHANNELS;
@@ -322,6 +405,7 @@ public:
    static const int num_of_W_decays               = MAX_NUMBER_OF_W_DECAYS;
    static const int num_of_Z_decays               = MAX_NUMBER_OF_Z_DECAYS;
    static const int num_of_tt_decays              = MAX_NUMBER_OF_tt_DECAYS;
+//   static const int num_of_ROCs                   = MAX_NUMBER_OF_ROCS;
 
    static const int num_of_Z1_match_statuses      = MAX_NUMBER_OF_Z1_MATCH_STATUSES;
    static const int num_of_Z2_match_statuses      = MAX_NUMBER_OF_Z2_MATCH_STATUSES;   

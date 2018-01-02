@@ -15,7 +15,7 @@ ROC::~ROC(){}
 
 
 //==================================================================================================
-void ROC::Fill( TString name, float var_value, int sig_proc, int bkg_proc, float jet_cut, bool cut )
+void ROC::Prepare( TString name, float var_value, int sig_proc, int bkg_proc, float jet_cut, bool cut )
 {
 
    temp_ROC.name      = name;
