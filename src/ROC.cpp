@@ -15,10 +15,10 @@ ROC::~ROC(){}
 
 
 //==================================================================================================
-void ROC::Prepare( TString name, float var_value, int sig_proc, int bkg_proc, float jet_cut, bool cut )
+void ROC::Prepare( int ROC_num, float var_value, int sig_proc, int bkg_proc, float jet_cut, bool cut )
 {
 
-   temp_ROC.name      = name;
+   temp_ROC.ROC_num   = ROC_num;
    temp_ROC.var_value = var_value;
    temp_ROC.sig_proc  = sig_proc;
    temp_ROC.bkg_proc  = bkg_proc;

@@ -17,13 +17,13 @@ class ROC
 public:
    ROC();
    ~ROC();
-   void Prepare( TString, float , int , int , float , bool );
+   void Prepare( int, float , int , int , float , bool );
    void Clean();
 
 
    struct ROCs
    {
-      TString name;
+      int ROC_num;
       float var_value;
       int sig_proc;
       int bkg_proc;

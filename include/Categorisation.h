@@ -36,9 +36,10 @@
 #include "bitops.h"
 #include "cConstants.h"
 #include "ROC.h"
+#include "Category.h"
 
 
-// BOOLS
+// Bools
 #define APPLY_K_FACTORS 1
 #define EXCLUDE_H2l2X 1
 #define REQUIRE_EXACTLY_4_GOOD_LEPTONS      0
@@ -48,11 +49,37 @@
 #define REQUIRE_H_LEPTONS_ARE_IN_ETA_PT_ACC 0
 #define REQUIRE_H_LEPTONS_ARE_GOOD          0
 
+#define USEQGTAGGING 0
+
+// Working points for MELA-only categorization
+#define USEMASSDEPWPVBF2JMELA 1
+#define WPVBF2JMELA  0.437  // ggH efficiency 0.25
+#define WPVBF1JMELA  0.697  // VBF efficiency 0.8
+#define WPWHHADRMELA 0.951  // WH efficiency  0.495
+#define WPZHHADRMELA 0.9937 // ZH efficiency  0.495
+
+// Working points for MELA+q/g categorization
+#define USEMASSDEPWPVBF2JMELAQG 0
+#define WPVBF2JMELAQG  0.363  // ggH efficiency 0.25
+#define WPVBF1JMELAQG  0.716  // VBF efficiency 0.8
+#define WPWHHADRMELAQG 0.965  // WH efficiency  0.495
+#define WPZHHADRMELAQG 0.9952 // ZH efficiency  0.495
+
+// MET
+#define METCUT 100
+
+// Baskets
+#define BASKETLIST 12
+
 // Jets
 #define CSVv2M 0.8484
 #define CSVv2L 0.5426
 #define OFFICIALQGTAGGER 1
 #define BTAGGINGSF 1 // 0 - none; 1 - central; 2 - up; 3 - down
+
+// Checks
+#define CHECKFROMCATEGORYCC 1
+
 
 using namespace std;
 
@@ -78,6 +105,7 @@ public:
    void UseMatchingInfo();
    void FillHistograms();
    void MakeROCs();
+   void Categorise();
    
    int FindCurrentProcess( TString );
    int FindCurrentAssocDecay();
@@ -100,6 +128,8 @@ private:
    int current_process_, current_final_state_, current_category_, current_assoc_dec_;
    float lumi_, k_factor_, partial_sample_weight_, m4l_min_, m4l_max_, delta_R_;
    double gen_sum_weights_, event_weight_, num_gen_events_;
+   
+   vector<TString> s_category_;
    
    int reco_ch_1, reco_ch_2, reco_ch_3;
    int gen_ch_1, gen_ch_2, gen_ch_3;
@@ -130,8 +160,10 @@ private:
    
 // Probabilities
  float Pvbf, Phjj;
+ 
+// Discriminants
+float KD, D_2j_VBF_Hjj, D_1j_VBF_Hj, D_2j_WH_hadr_Hjj, D_2j_ZH_hadr_Hjj;
 
-   
 // Per event lepton variables
    vector<int>   gen_H_lep_id_;
    vector<float> gen_H_lep_pt_;
@@ -219,7 +251,9 @@ private:
    float jet_p_gluon_[99];
    float jet_p_g_over_p_q_[99];
    
+   float jetPhi_[99];
    float jet_QG_likelihood_[99];
+   float jet_QG_likelihood_raw_[99];
    
 // Probabilities and discriminants
    float p_q_j1_p_q_j2;

@@ -73,6 +73,10 @@ public:
    void FillMatchLepsWH( float, float, int, int, int, int, int );
    void FillMatchLepsZH( float, float, int, int, int, int, int );
    void FillMatchLepsttH( float, float, int, int, int, int, int );
+   
+   void FillSigROC( float, int, float );
+   void FillBkgROC( float, int, float );
+
 
    void SaveHistograms( TString );
    
@@ -81,12 +85,12 @@ private:
       
    float lumi_;
    TString histo_name_, histo_label_;
-   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_decay_;
+   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_decay_, s_ROC_;
    vector<TString> s_H_lep_match_status_, s_all_lep_match_status_, s_WH_lep_match_status_, s_ZH_lep_match_status_, s_ttH_lep_match_status_;
    
    vector<Counters::variable> ROC_to_variables;
    
-   Variables var_pair, variable;
+   Variables var_pair, var;
    
 //==============
 // 1D histograms
@@ -112,7 +116,9 @@ private:
    TH1F* h_bc_in_sig_reg_match_ZH_leps_[Counters::num_of_vars][Counters::num_of_ZH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
    TH1F* h_bc_in_sig_reg_match_ttH_leps_[Counters::num_of_vars][Counters::num_of_ttH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
 
-//   TH1F* h_ROC_sig_[Counters::num_of_ROCs];
+   //ROCs
+   TH1F* h_ROC_sig_[Counters::num_of_ROCs];
+   TH1F* h_ROC_bkg_[Counters::num_of_ROCs];
 
 
 //==============

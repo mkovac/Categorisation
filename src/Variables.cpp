@@ -34,13 +34,14 @@ void Variables::PrepareVarPair( TString name, TString x_label, TString y_label, 
 
 
 //=========================================================================================
-void Variables::PrepareVar( TString name, TString label, int n_bins, int x_min, int x_max )
+void Variables::PrepareVar( TString name, TString label, int n_bins, int x_min, int x_max, int x_max_roc )
 {
-   temp_variable.name   = name;
-   temp_variable.label  = label;
-   temp_variable.n_bins = n_bins;
-   temp_variable.x_min  = x_min;
-   temp_variable.x_max  = x_max;
+   temp_variable.name      = name;
+   temp_variable.label     = label;
+   temp_variable.n_bins    = n_bins;
+   temp_variable.x_min     = x_min;
+   temp_variable.x_max     = x_max;
+   temp_variable.x_max_roc = x_max_roc;
    
    vec_var.push_back(temp_variable);
 }

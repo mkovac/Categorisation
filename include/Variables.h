@@ -18,7 +18,7 @@ public:
    Variables();
    ~Variables();
    void PrepareVarPair( TString, TString, TString, int, int, int, int, int, int );
-   void PrepareVar( TString, TString, int, int, int );
+   void PrepareVar( TString, TString, int, int, int, int);
    
    struct pt
    {
@@ -125,6 +125,7 @@ public:
       int n_bins;
       float x_min;
       float x_max;
+      float x_max_roc;
    };
 
    vector<variables> vec_var;

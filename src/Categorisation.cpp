@@ -2,7 +2,7 @@
 #include "Categorisation.h"
 
 // Constructor
-//============================================================
+//=================================================
 Categorisation::Categorisation( float lumi ):Tree()
 {
    lumi_ = lumi;
@@ -25,16 +25,16 @@ Categorisation::Categorisation( float lumi ):Tree()
    roc = new ROC();
    
 }
-//============================================================
+//=================================================
 
 
 
 // Destructor
-//====================
+//===============================
 Categorisation::~Categorisation()
 {
 }
-//====================
+//===============================
 
 
 
@@ -46,6 +46,8 @@ void Categorisation::MakeHistograms( TString input_file_name )
    hist_counters_ = (TH1F*)input_file_->Get("ZZTree/Counters");
    num_gen_events_ = (double)hist_counters_->GetBinContent(1);
    gen_sum_weights_ = (double)hist_counters_->GetBinContent(40);
+   
+   cout << "[INFO] Number of generated events = " << num_gen_events_ << endl;
    
    input_tree_ = (TTree*)input_file_->Get("ZZTree/candTree");
    Init( input_tree_, input_file_name );
@@ -147,6 +149,7 @@ void Categorisation::MakeHistograms( TString input_file_name )
 
       FillHistograms();
       MakeROCs();
+      Categorise();
 
    } // end events loop
 }
@@ -1183,8 +1186,10 @@ void Categorisation::FillHistograms()
          else jet_no_b_tag_ += event_weight_;
       }
 
+      jetPhi_[i_jet] = JetPhi->at(i_jet); // Needed for Category.cc
 
-      jet_QG_likelihood_[i_jet] = JetQGLikelihood->at(i_jet);
+      jet_QG_likelihood_[i_jet]     = JetQGLikelihood->at(i_jet);
+      jet_QG_likelihood_raw_[i_jet] = JetQGLikelihood->at(i_jet);
 
       if ( JetQGLikelihood->at(i_jet) < 0. && i_jet < 2 )
       {
@@ -1208,7 +1213,7 @@ void Categorisation::FillHistograms()
 //   Fix this line
 //   if ( !BTAGGINGSF && nCleanedJetsPt30BTagged!= n_jets_B_tagged_redone ) cout<<"ERROR : inconsistency in number of b-tagged jets"<<endl;
 
-   if ( nCleanedJets >= 2 )
+   if ( nCleanedJetsPt30 >= 2 )
    {
       vbf_2_jets += event_weight_;
    }
@@ -1226,16 +1231,14 @@ void Categorisation::FillHistograms()
    float p_WH_lept = p_LepWH_SIG_ghw1_1_JHUGen/c_WH_lept;
    float p_ZH_lept = p_LepZH_SIG_ghz1_1_JHUGen/c_ZH_lept;
 
-   float KD = 1/(1 + getDbkgkinConstant(Z1Flav*Z2Flav, ZZMass)*p_QQB_BKG_MCFM/p_GG_SIG_ghg2_1_ghz1_1_JHUGen);
-
-   float D_2j_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal);
-   float D_1j_VBF_Hj  = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal));
-
-   float D_2j_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal);
-   float D_2j_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal);
+   KD = 1/(1 + getDbkgkinConstant(Z1Flav*Z2Flav, ZZMass)*p_QQB_BKG_MCFM/p_GG_SIG_ghg2_1_ghz1_1_JHUGen);
+   D_2j_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal);
+   D_1j_VBF_Hj  = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal));
+   D_2j_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal);
+   D_2j_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal);
 
 
-   if ( nCleanedJets >= 2 )
+   if ( nCleanedJetsPt30 >= 2 )
    {
       p_q_j1_p_q_j2 = 1000*1000*jet_p_quark_[0]*jet_p_quark_[1]/(c_QG_unoff*c_QG_unoff);
       p_g_j1_p_g_j2 = 1000*1000*jet_p_gluon_[0]*jet_p_gluon_[1];
@@ -1298,7 +1301,7 @@ void Categorisation::FillHistograms()
       D_2j_Mela_qnrt_QG_ZH_hadr_Hjj = -2;
    }
 
-   if ( nCleanedJets >= 1 )
+   if ( nCleanedJetsPt30 >= 1 )
    {
       p_quark = 1000 * jet_p_quark_[0]/c_QG_unoff;
       p_gluon = 1000 * jet_p_gluon_[0];
@@ -1355,25 +1358,25 @@ void Categorisation::FillHistograms()
    variable_map[Counters::Dkinbkg].second = 1;
 
    variable_map[Counters::DiJetFisher].first = DiJetFisher;
-   variable_map[Counters::DiJetFisher].second = (nCleanedJets >= 2);
+   variable_map[Counters::DiJetFisher].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pvbf].first  = Pvbf;
-   variable_map[Counters::Pvbf].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pvbf].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Phjj].first  = Phjj;
-   variable_map[Counters::Phjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::Phjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pvbf1j].first  = p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal/c_VBF_1j;
-   variable_map[Counters::Pvbf1j].second = nCleanedJets == 1;
+   variable_map[Counters::Pvbf1j].second = nCleanedJetsPt30 == 1;
 
    variable_map[Counters::Phj].first  = p_JQCD_SIG_ghg2_1_JHUGen_JECNominal;
-   variable_map[Counters::Phj].second = nCleanedJets == 1;
+   variable_map[Counters::Phj].second = nCleanedJetsPt30 == 1;
 
    variable_map[Counters::Pwhhadr].first  = p_HadWH_SIG_ghw1_1_JHUGen_JECNominal/c_WH;
-   variable_map[Counters::Pwhhadr].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pwhhadr].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pzhhadr].first  = p_HadZH_SIG_ghz1_1_JHUGen_JECNominal/c_ZH;
-   variable_map[Counters::Pzhhadr].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pzhhadr].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pwhlept].first  = p_WH_lept;
    variable_map[Counters::Pwhlept].second = nExtraLep >= 1;
@@ -1382,145 +1385,145 @@ void Categorisation::FillHistograms()
    variable_map[Counters::Pzhlept].second = nExtraZ >= 1;
 
    variable_map[Counters::D2jVbfHjj].first  = D_2j_VBF_Hjj;
-   variable_map[Counters::D2jVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D1jVbfHj].first  = D_1j_VBF_Hj;
-   variable_map[Counters::D1jVbfHj].second = nCleanedJets == 1;
+   variable_map[Counters::D1jVbfHj].second = nCleanedJetsPt30 == 1;
 
    variable_map[Counters::D2jWHHadrHjj].first  = D_2j_WH_hadr_Hjj;
-   variable_map[Counters::D2jWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jZHHadrHjj].first  = D_2j_ZH_hadr_Hjj;
-   variable_map[Counters::D2jZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pqj1].first  = p_quark;
-   variable_map[Counters::Pqj1].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pqj1].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pgj1].first  = p_gluon;
-   variable_map[Counters::Pgj1].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pgj1].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pqj1Pqj2].first  = p_q_j1_p_q_j2;
-   variable_map[Counters::Pqj1Pqj2].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pqj1Pqj2].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pgj1Pgj2].first  = p_g_j1_p_g_j2;
-   variable_map[Counters::Pgj1Pgj2].second = (nCleanedJets >= 2);
+   variable_map[Counters::Pgj1Pgj2].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jqg].first  = D_2j_qg;
-   variable_map[Counters::D2jqg].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jqg].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Dqgj1Dqgj2].first  = D_qg_j1_D_qg_j2;
-   variable_map[Counters::Dqgj1Dqgj2].second = (nCleanedJets >= 2);
+   variable_map[Counters::Dqgj1Dqgj2].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pqj1VbfTopo].first  = p_quark;
-   variable_map[Counters::Pqj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+   variable_map[Counters::Pqj1VbfTopo].second = (nCleanedJetsPt30 >= 2 && D_2j_VBF_Hjj > 0.5);
 
    variable_map[Counters::Pgj1VbfTopo].first  = p_gluon;
-   variable_map[Counters::Pgj1VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+   variable_map[Counters::Pgj1VbfTopo].second = (nCleanedJetsPt30 >= 2 && D_2j_VBF_Hjj > 0.5);
 
    variable_map[Counters::Pqj1Pqj2VbfTopo].first  = p_q_j1_p_q_j2;
-   variable_map[Counters::Pqj1Pqj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+   variable_map[Counters::Pqj1Pqj2VbfTopo].second = (nCleanedJetsPt30 >= 2 && D_2j_VBF_Hjj > 0.5);
 
    variable_map[Counters::Pgj1Pgj2VbfTopo].first  = p_g_j1_p_g_j2;
-   variable_map[Counters::Pgj1Pgj2VbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+   variable_map[Counters::Pgj1Pgj2VbfTopo].second = (nCleanedJetsPt30 >= 2 && D_2j_VBF_Hjj > 0.5);
 
    variable_map[Counters::D2jqgVbfTopo].first  = D_2j_qg;
-   variable_map[Counters::D2jqgVbfTopo].second = (nCleanedJets >= 2 && D_2j_VBF_Hjj > 0.5);
+   variable_map[Counters::D2jqgVbfTopo].second = (nCleanedJetsPt30 >= 2 && D_2j_VBF_Hjj > 0.5);
 
    variable_map[Counters::Pq].first  = p_quark;
-   variable_map[Counters::Pq].second = (nCleanedJets == 1);
+   variable_map[Counters::Pq].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::Pg].first  = p_gluon;
-   variable_map[Counters::Pg].second = (nCleanedJets == 1);
+   variable_map[Counters::Pg].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D1jqg].first  = D_1j_qg;
-   variable_map[Counters::D1jqg].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jqg].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D2jMelaQGVbfHjj].first  = D_2j_Mela_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaD2jQGVbfHjj].first  = D_2j_Mela_D_2j_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaD2jQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaD2jQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D1jMelaQGVbfHj].first  = D_1j_Mela_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D1jMelaD1jQGVbfHj].first  = D_1j_Mela_D_1j_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaD1jQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaD1jQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D2jMelaQGWHHadrHjj].first  = D_2j_Mela_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaD2jQGWHHadrHjj].first  = D_2j_Mela_D_2j_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaD2jQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaD2jQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQGZHHadrHjj].first  = D_2j_Mela_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaD2jQGZHHadrHjj].first  = D_2j_Mela_D_2j_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaD2jQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaD2jQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::RatioPvbfPhjj].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal;
-   variable_map[Counters::RatioPvbfPhjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::RatioPvbfPhjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].first  = jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
-   variable_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].second = (nCleanedJets >= 2);
+   variable_map[Counters::RatioPqj1Pqj2Pgj1Pgj2].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].first  = p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal/p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal*jet_p_g_over_p_q_[0]*jet_p_g_over_p_q_[1];
-   variable_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].second = (nCleanedJets >= 2);
+   variable_map[Counters::RatioPvbfPqj1Pqj2PhjjPgj1Pgj2].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaExpQGVbfHjj].first  = D_2j_Mela_exp_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaExpQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaExpQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaSqQGVbfHjj].first  = D_2j_Mela_sq_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaSqQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaSqQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaSqrtQGVbfHjj].first  = D_2j_Mela_sqrt_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaSqrtQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaSqrtQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaCbrtQGVbfHjj].first  = D_2j_Mela_cbrt_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaCbrtQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaCbrtQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQrrtQGVbfHjj].first  = D_2j_Mela_qrrt_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaQrrtQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQrrtQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQnrtQGVbfHjj].first  = D_2j_Mela_qnrt_QG_VBF_Hjj;
-   variable_map[Counters::D2jMelaQnrtQGVbfHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQnrtQGVbfHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D1jMelaSqrtQGVbfHj].first  = D_1j_Mela_sqrt_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaSqrtQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaSqrtQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D1jMelaCbrtQGVbfHj].first  = D_1j_Mela_cbrt_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaCbrtQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaCbrtQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D1jMelaQrrtQGVbfHj].first  = D_1j_Mela_qrrt_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaQrrtQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaQrrtQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D1jMelaQnrtQGVbfHj].first  = D_1j_Mela_qnrt_QG_VBF_Hj;
-   variable_map[Counters::D1jMelaQnrtQGVbfHj].second = (nCleanedJets == 1);
+   variable_map[Counters::D1jMelaQnrtQGVbfHj].second = (nCleanedJetsPt30 == 1);
 
    variable_map[Counters::D2jMelaSqrtQGWHHadrHjj].first  = D_2j_Mela_sqrt_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaSqrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaSqrtQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaCbrtQGWHHadrHjj].first  = D_2j_Mela_cbrt_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaCbrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaCbrtQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQrrtQGWHHadrHjj].first  = D_2j_Mela_qrrt_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQrrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQrrtQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQnrtQGWHHadrHjj].first  = D_2j_Mela_qnrt_QG_WH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQnrtQGWHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQnrtQGWHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaSqrtQGZHHadrHjj].first  = D_2j_Mela_sqrt_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaSqrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaSqrtQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaCbrtQGZHHadrHjj].first  = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaCbrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaCbrtQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQrrtQGZHHadrHjj].first  = D_2j_Mela_qrrt_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQrrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQrrtQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::D2jMelaQnrtQGZHHadrHjj].first  = D_2j_Mela_qnrt_QG_ZH_hadr_Hjj;
-   variable_map[Counters::D2jMelaQnrtQGZHHadrHjj].second = (nCleanedJets >= 2);
+   variable_map[Counters::D2jMelaQnrtQGZHHadrHjj].second = (nCleanedJetsPt30 >= 2);
 
    variable_map[Counters::Pt4l].first  = ZZPt;
    variable_map[Counters::Pt4l].second = 1;
@@ -1552,7 +1555,7 @@ void Categorisation::FillHistograms()
    variable_map[Counters::NExtraZ].first  = (float)nExtraZ;
    variable_map[Counters::NExtraZ].second = 1;
 
-   variable_map[Counters::NJets].first  = (float)nCleanedJets;
+   variable_map[Counters::NJets].first  = (float)nCleanedJetsPt30;
    variable_map[Counters::NJets].second = 1;
 
    variable_map[Counters::NBtaggedJets].first  = (float)nCleanedJetsPt30BTagged;
@@ -1574,7 +1577,7 @@ void Categorisation::FillHistograms()
    
    get<0>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_VBF_Hjj;
    get<1>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = D_2j_qg;
-   get<2>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = (nCleanedJets >= 2);
+   get<2>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = (nCleanedJetsPt30 >= 2);
    get<3>(variable_pair_map[Counters::D2jVbfHjj_vs_D2jqg]) = 0;
 
 
@@ -1797,10 +1800,10 @@ void Categorisation::FillHistograms()
 //=============================
 void Categorisation::MakeROCs()
 {
-   roc->Prepare( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
-   roc->Prepare( "DiJetFisher", DiJetFisher, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
-   roc->Prepare( "Pvbf", Pvbf, Counters::H125VBF, Counters::H125ggH, nCleanedJets >= 2, 1);
-   roc->Prepare( "Pvbf", Pvbf, Counters::H125VBF, Counters::qqZZ, nCleanedJets >= 2, 1);
+   roc->Prepare(Counters::DiJetFisher_qqH_ggH, DiJetFisher, Counters::H125VBF, Counters::H125ggH, nCleanedJetsPt30 >= 2, 1);
+   roc->Prepare(Counters::DiJetFisher_qqH_qqZZ, DiJetFisher, Counters::H125VBF, Counters::qqZZ, nCleanedJetsPt30 >= 2, 1);
+   roc->Prepare(Counters::Pvbf_qqH_ggH, Pvbf, Counters::H125VBF, Counters::H125ggH, nCleanedJetsPt30 >= 2, 1);
+   roc->Prepare(Counters::Pvbf_qqH_qqZZ, Pvbf, Counters::H125VBF, Counters::qqZZ, nCleanedJetsPt30 >= 2, 1);
    
    for ( vector<ROC::ROCs>::iterator it = roc->vec_ROCs.begin(); it != roc->vec_ROCs.end(); it++ )
    {
@@ -1808,37 +1811,493 @@ void Categorisation::MakeROCs()
 
       if ( current_process_ == it->sig_proc )
       {
-      
+         histograms->FillSigROC(it->var_value, it->ROC_num, event_weight_);
       }
       else if (current_process_ == it->bkg_proc )
       {
-      
+         histograms->FillBkgROC(it->var_value, it->ROC_num, event_weight_);
       }
-
    }
-   
-//   cout << ROC::vec_ROCs.at(2).var_value << " " << roc->vec_ROCs.at(2).jet_cut << endl;
 }
 //=============================
 
 
 
+Float_t mdWPVBF2JMELA(Float_t m4l) { return 1.043-460./(m4l+634.); }
+
+Float_t mdWPVBF2JMELAQG(Float_t m4l) { return 1.04-239./(m4l+502.); } // not updated for Mor17
 
 
-//      for(int ro=0; ro<nROCs; ro++){
-//   if(!rocPassCut[ro]) continue;
-//   if(currentProcess==rocRef[ro][1])
-//     hRocSgnl[ro]->Fill(varVal[rocRef[ro][0]],eventWeight);
-//   else if(currentProcess==rocRef[ro][2])
-//     hRocBkgd[ro]->Fill(varVal[rocRef[ro][0]],eventWeight);
+
+
+//===============================
+void Categorisation::Categorise()
+{
+   int current_basket = -1;
+
+   bool Mor_17_tag_VBF_2j  = 0;
+   bool Mor_17_tag_VBF_1j  = 0;
+   bool Mor_17_tag_WH_hadr = 0;
+   bool Mor_17_tag_ZH_hadr = 0;
+   
+   if ( USEQGTAGGING )
+   {
+      Mor_17_tag_VBF_2j  = D_2j_Mela_cbrt_QG_VBF_Hjj > (USEMASSDEPWPVBF2JMELAQG ? mdWPVBF2JMELAQG(ZZMass) : WPVBF2JMELAQG);
+      Mor_17_tag_VBF_1j  = D_1j_Mela_cbrt_QG_VBF_Hj > WPVBF1JMELAQG;
+      Mor_17_tag_WH_hadr = D_2j_Mela_cbrt_QG_WH_hadr_Hjj > WPWHHADRMELAQG;
+      Mor_17_tag_ZH_hadr = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj > WPZHHADRMELAQG;
+   }
+   else
+   {
+      Mor_17_tag_VBF_2j  = D_2j_VBF_Hjj > (USEMASSDEPWPVBF2JMELA ? mdWPVBF2JMELA(ZZMass) : WPVBF2JMELA);
+      Mor_17_tag_VBF_1j  = D_1j_VBF_Hj > WPVBF1JMELA;
+      Mor_17_tag_WH_hadr = D_2j_WH_hadr_Hjj > WPWHHADRMELA;
+      Mor_17_tag_ZH_hadr = D_2j_ZH_hadr_Hjj > WPZHHADRMELA;
+   }
+
+   int cs  = -1;
+   int cm = -1;
+
+   s_category_.push_back("unagged");
+   s_category_.push_back("VBF_1j_tagged");
+   s_category_.push_back("VBF_2j_tagged");
+   s_category_.push_back("VH_lepton_tagged");
+   s_category_.push_back("VH_hadron_tagged");
+   s_category_.push_back("ttH_tagged");
+   s_category_.push_back("VH_MET_tagged");
+   s_category_.push_back("Inclusive");
+   
+
+   if ( nCleanedJetsPt30 == 0 )
+   {
+      if ( nExtraLep == 0 && PFMET > METCUT )
+      {
+         cs = 62;
+         cm = Counters::VH_MET_tagged;
+      }
+     else if ( nExtraLep == 0 )
+     {
+        cs = 1;
+        cm = Counters::untagged;
+     }
+     else if ( nExtraLep == 1 )
+     {
+        cs = 2;
+        cm = Counters::VH_lepton_tagged;
+     }
+     else if ( nExtraZ >= 1 )
+     {
+        cs = 3;
+        cm = Counters::VH_lepton_tagged;
+     }
+     else if ( nExtraLep >= 2 )
+     {
+        cs = 4;
+        cm = Counters::VH_lepton_tagged;
+     }
+     else
+     {
+        cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+     }
+   }
+   else if ( nCleanedJetsPt30 == 1 )
+   {
+      if ( nCleanedJetsPt30BTagged == 0 )
+      {
+         if ( nExtraLep == 0 && PFMET > METCUT )
+         {
+            cs = 63;
+            cm = Counters::VH_MET_tagged;
+         }
+         else if ( nExtraLep == 0 && Mor_17_tag_VBF_1j )
+         {
+            cs = 5;
+            cm = Counters::VBF_1j_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 6;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 7;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 8;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 9;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged == 1 )
+      {
+         if ( nExtraLep == 0 && PFMET > METCUT )
+         {
+            cs = 64;
+            cm = Counters::VH_MET_tagged;
+         }
+         else if ( nExtraLep == 0 && Mor_17_tag_VBF_1j )
+         {
+            cs = 10;
+            cm = Counters::VBF_1j_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 11;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 12;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 13;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 14;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      } // nCleanedJetsPt30BTagged == 1
+      else cout << "[WARNING] Inconsistent nCleanedJetsPt30BTagged!" << endl;
+   } // nCleanedJetsPt30 == 1
+   else if ( nCleanedJetsPt30 == 2 )
+   {
+      if ( nCleanedJetsPt30BTagged == 0 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 15;
+            cm = Counters::VBF_2j_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 16;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 17;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 18;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 19;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 20;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged == 1 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 21;
+            cm = Counters::VBF_2j_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 22;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 23;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 24;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 25;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 26;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged == 2 )
+      {
+         if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 27;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 28;
+            cm = Counters::untagged; // changed wrt Mor17
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 29;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 30;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 31;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else cout << "[WARNING] Inconsistent nCleanedJetsPt30BTagged!" << endl;
+   } // end nCleanedJetsPt30 == 2
+   else if ( nCleanedJetsPt30 == 3 )
+   {
+      if ( nCleanedJetsPt30BTagged == 0 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 32;
+            cm = Counters::VBF_2j_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 33;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 34;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 35;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 36;
+            cm = Counters::VH_lepton_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 37;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged == 1 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 38;
+            cm = Counters::VBF_2j_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 39;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 40;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 41;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 42;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 43;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged >= 2 )
+      {
+         if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 44;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 45;
+            cm = Counters::untagged; // changed wrt Mor17
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 46;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 47;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 48;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else cout << "[WARNING] Inconsistent nCleanedJetsPt30BTagged!" << endl;
+   } // end nCleanedJetsPt30 == 3
+   else if ( nCleanedJetsPt30 >= 4 )
+   {
+      if ( nCleanedJetsPt30BTagged == 0 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 49;
+            cm = Counters::VBF_2j_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 50;
+            cm = Counters::VH_hadron_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 51;
+            cm = Counters::untagged;
+         }
+         else if ( nExtraLep == 1 )
+         {
+            cs = 52;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraZ >= 1 )
+         {
+            cs = 53;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 2 )
+         {
+            cs = 54;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged == 1 )
+      {
+         if ( nExtraLep == 0 && Mor_17_tag_VBF_2j )
+         {
+            cs = 55;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 56;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 57;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 1 )
+         {
+            cs = 58;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else if ( nCleanedJetsPt30BTagged >= 2 )
+      {
+         if ( nExtraLep == 0 && (Mor_17_tag_WH_hadr || Mor_17_tag_ZH_hadr) )
+         {
+            cs = 59;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep == 0 )
+         {
+            cs = 60;
+            cm = Counters::ttH_tagged;
+         }
+         else if ( nExtraLep >= 1 )
+         {
+            cs = 61;
+            cm = Counters::ttH_tagged;
+         }
+         else cout << "[WARNING] Inconsistent nExtraLep!" << endl;
+      }
+      else cout<< "[WARNING] Inconsistent nCleanedJetsPt30BTagged!" << endl;
+   } // end nCleanedJetsPt30 == 4
+   else cout<<"[WARNING] Inconsistent nCleanedJetsPt30!" << endl;
+
+   if ( BASKETLIST == 11 ) current_basket = cs;
+   if ( BASKETLIST == 12 ) current_basket = cm;
+//   if(BASKETLIST==11) labelMerge[cs+1] = lab[cm];
+
+   cout << "Event " << EventNumber << "   nJets " << nCleanedJetsPt30 << "   nJetsB " << nCleanedJetsPt30BTagged << "   Category " << cm << endl;
+
+   if ( BASKETLIST == 12 && CHECKFROMCATEGORYCC )
+   {
+      float current_basket_from_cat = categoryMor17(nExtraLep,
+                                                    nExtraZ,
+                                                    nCleanedJetsPt30,
+                                                    nCleanedJetsPt30BTagged,
+                                                    jet_QG_likelihood_raw_,
+                                                    p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                                                    p_JQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                                                    p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                                                    p_JVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                                                    pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                                                    p_HadWH_SIG_ghw1_1_JHUGen_JECNominal,
+                                                    p_HadZH_SIG_ghz1_1_JHUGen_JECNominal,
+                                                    jetPhi_,
+                                                    ZZMass,
+                                                    PFMET,
+                                                    1, // Whether to use VHMETTagged
+                                                    USEQGTAGGING
+                                                    );
+     
+//      if ( current_basket != current_basket_from_cat )
+//      {
+//         cout << "[Error] Event " << EventNumber << ": Category from Categorisation framework = "
+//              << current_basket << ", from Category.cc = " << current_basket_from_cat << endl;
 //      }
-//      Bool_t evwPassCut[nEVWs] = {
-//   nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets==1,nJets>=2,nJets>=2,nJets>=2,nJets>=2,nExtraLep>=1,nExtraZ>=1,
-//      };
-//      for(int e=0; e<nEVWs; e++){
-//   if(!evwPassCut[e]) continue;
-//     hEvw[e][currentProcess]->Fill(varVal[evwRef[e][0]],eventWeight);
-//      }
+   } // if BASKETLIST
+
+}
+//===============================
+
+
+
+
+
 
 
 
