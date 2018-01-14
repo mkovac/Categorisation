@@ -23,7 +23,7 @@ int main( int argc, char *argv[] )
    gROOT->ProcessLine(".L ./ext/setTDRStyle_cpp.so");
    gROOT->ProcessLine("setTDRStyle();"); // Needed already here to save histos with markers
    
-   TString path            = "/afs/cern.ch/work/m/mkovac/CMS/RUN_2/Data/Moriond_2017/";
+   TString path            = "/afs/cern.ch/work/m/mkovac/CMS/RUN_2/Data/Moriond_2018/";
    TString file_name       = "/ZZ4lAnalysis.root";
    
    TString Data        = path + "AllData_2017" + file_name;

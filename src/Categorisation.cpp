@@ -23,7 +23,6 @@ Categorisation::Categorisation( float lumi ):Tree()
    
    histograms = new Histograms(lumi_);
    roc = new ROC();
-   
 }
 //=================================================
 
@@ -67,6 +66,12 @@ void Categorisation::MakeHistograms( TString input_file_name )
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);
       nbytes += nb;
+      
+      // Working points
+      WP_VBF2j = getDVBF2jetsWP(ZZMass, USEQGTAGGING);
+      WP_VBF1j = getDVBF1jetWP(ZZMass, USEQGTAGGING);
+      WP_WHh   = getDWHhWP(ZZMass, USEQGTAGGING);
+      WP_ZHh   = getDZHhWP(ZZMass, USEQGTAGGING);
       
       // Reset per-event counters
       ResetPerEventStuff();
@@ -497,7 +502,7 @@ void Categorisation::FindGenChannel()
 void Categorisation::FindRecoChannel()
 {
 
-   reco_ch_1 = Counters::reco_ch_1_def; // 4e, 4mu, 2e2mu
+   reco_ch_1 = Counters::reco_ch_1_def; // only 4e or only 4mu or only 2e2mu
    reco_ch_2 = Counters::reco_ch_2_def; // 4e or 4mu or 2e2mu
    reco_ch_3 = Counters::reco_ch_3_def; // all channels
 
@@ -1221,6 +1226,7 @@ void Categorisation::FillHistograms()
 
    float vbf_lost_jet = 0.; // Why?
    
+   // Get c-constants
    float c_VBF_2j = getDVBF2jetsConstant(ZZMass);
    float c_VBF_1j = getDVBF1jetConstant(ZZMass);
    float c_WH = getDWHhConstant(ZZMass);
@@ -1231,12 +1237,33 @@ void Categorisation::FillHistograms()
    float p_WH_lept = p_LepWH_SIG_ghw1_1_JHUGen/c_WH_lept;
    float p_ZH_lept = p_LepZH_SIG_ghz1_1_JHUGen/c_ZH_lept;
 
-   KD = 1/(1 + getDbkgkinConstant(Z1Flav*Z2Flav, ZZMass)*p_QQB_BKG_MCFM/p_GG_SIG_ghg2_1_ghz1_1_JHUGen);
-   D_2j_VBF_Hjj = 1/(1 + c_VBF_2j*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal);
-   D_1j_VBF_Hj  = 1/(1 + (c_VBF_1j*p_JQCD_SIG_ghg2_1_JHUGen_JECNominal)/(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal*pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal));
-   D_2j_WH_hadr_Hjj = 1/(1 + c_WH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadWH_SIG_ghw1_1_JHUGen_JECNominal);
-   D_2j_ZH_hadr_Hjj = 1/(1 + c_ZH*p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal/p_HadZH_SIG_ghz1_1_JHUGen_JECNominal);
+   // Discriminants
+   KD = D_bkg_kin(p_GG_SIG_ghg2_1_ghz1_1_JHUGen,
+                  p_QQB_BKG_MCFM,
+                  Z1Flav*Z2Flav,
+                  ZZMass);
 
+   D_2j_VBF_Hjj = DVBF2j_ME(p_JJVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                            p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                            ZZMass);
+
+   D_1j_VBF_Hj = DVBF1j_ME(p_JVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                           pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal,
+                           p_JQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                           ZZMass);
+   
+   D_2j_WH_hadr_Hjj = DWHh_ME(p_HadWH_SIG_ghw1_1_JHUGen_JECNominal,
+                              p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                              p_HadWH_mavjj_JECNominal,
+                              p_HadWH_mavjj_true_JECNominal,
+                              ZZMass);
+   
+   D_2j_ZH_hadr_Hjj = DZHh_ME(p_HadZH_SIG_ghz1_1_JHUGen_JECNominal,
+                              p_JJQCD_SIG_ghg2_1_JHUGen_JECNominal,
+                              p_HadZH_mavjj_JECNominal,
+                              p_HadZH_mavjj_true_JECNominal,
+                              ZZMass);
+   
 
    if ( nCleanedJetsPt30 >= 2 )
    {
@@ -1842,17 +1869,17 @@ void Categorisation::Categorise()
    
    if ( USEQGTAGGING )
    {
-      Mor_17_tag_VBF_2j  = D_2j_Mela_cbrt_QG_VBF_Hjj > (USEMASSDEPWPVBF2JMELAQG ? mdWPVBF2JMELAQG(ZZMass) : WPVBF2JMELAQG);
-      Mor_17_tag_VBF_1j  = D_1j_Mela_cbrt_QG_VBF_Hj > WPVBF1JMELAQG;
-      Mor_17_tag_WH_hadr = D_2j_Mela_cbrt_QG_WH_hadr_Hjj > WPWHHADRMELAQG;
-      Mor_17_tag_ZH_hadr = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj > WPZHHADRMELAQG;
+//      Mor_17_tag_VBF_2j  = D_2j_Mela_cbrt_QG_VBF_Hjj > (USEMASSDEPWPVBF2JMELAQG ? mdWPVBF2JMELAQG(ZZMass) : WPVBF2JMELAQG);
+//      Mor_17_tag_VBF_1j  = D_1j_Mela_cbrt_QG_VBF_Hj > WPVBF1JMELAQG;
+//      Mor_17_tag_WH_hadr = D_2j_Mela_cbrt_QG_WH_hadr_Hjj > WPWHHADRMELAQG;
+//      Mor_17_tag_ZH_hadr = D_2j_Mela_cbrt_QG_ZH_hadr_Hjj > WPZHHADRMELAQG;
    }
    else
    {
-      Mor_17_tag_VBF_2j  = D_2j_VBF_Hjj > (USEMASSDEPWPVBF2JMELA ? mdWPVBF2JMELA(ZZMass) : WPVBF2JMELA);
-      Mor_17_tag_VBF_1j  = D_1j_VBF_Hj > WPVBF1JMELA;
-      Mor_17_tag_WH_hadr = D_2j_WH_hadr_Hjj > WPWHHADRMELA;
-      Mor_17_tag_ZH_hadr = D_2j_ZH_hadr_Hjj > WPZHHADRMELA;
+      Mor_17_tag_VBF_2j  = D_2j_VBF_Hjj > (USEMASSDEPWPVBF2JMELA ? mdWPVBF2JMELA(ZZMass) : WP_VBF2j);
+      Mor_17_tag_VBF_1j  = D_1j_VBF_Hj > WP_VBF1j;
+      Mor_17_tag_WH_hadr = D_2j_WH_hadr_Hjj > WP_WHh;
+      Mor_17_tag_ZH_hadr = D_2j_ZH_hadr_Hjj > WP_ZHh;
    }
 
    int cs  = -1;
@@ -2261,7 +2288,7 @@ void Categorisation::Categorise()
    if ( BASKETLIST == 12 ) current_basket = cm;
 //   if(BASKETLIST==11) labelMerge[cs+1] = lab[cm];
 
-   cout << "Event " << EventNumber << "   nJets " << nCleanedJetsPt30 << "   nJetsB " << nCleanedJetsPt30BTagged << "   Category " << cm << endl;
+//   cout << "Event " << EventNumber << "   nJets " << nCleanedJetsPt30 << "   nJetsB " << nCleanedJetsPt30BTagged << "   Category " << cm << endl;
 
    if ( BASKETLIST == 12 && CHECKFROMCATEGORYCC )
    {
@@ -2277,6 +2304,10 @@ void Categorisation::Categorise()
                                                     pAux_JVBF_SIG_ghv1_1_JHUGen_JECNominal,
                                                     p_HadWH_SIG_ghw1_1_JHUGen_JECNominal,
                                                     p_HadZH_SIG_ghz1_1_JHUGen_JECNominal,
+                                                    p_HadWH_mavjj_JECNominal,
+                                                    p_HadWH_mavjj_true_JECNominal,
+                                                    p_HadZH_mavjj_JECNominal,
+                                                    p_HadZH_mavjj_true_JECNominal,
                                                     jetPhi_,
                                                     ZZMass,
                                                     PFMET,
@@ -2284,23 +2315,22 @@ void Categorisation::Categorise()
                                                     USEQGTAGGING
                                                     );
      
-//      if ( current_basket != current_basket_from_cat )
-//      {
-//         cout << "[Error] Event " << EventNumber << ": Category from Categorisation framework = "
-//              << current_basket << ", from Category.cc = " << current_basket_from_cat << endl;
-//      }
+      if ( current_basket != current_basket_from_cat )
+      {
+         cout << "[Error] Event " << EventNumber << ": Category from Categorisation framework = "
+              << current_basket << ", from Category.cc = " << current_basket_from_cat << endl;
+      }
    } // if BASKETLIST
+   
+   histograms->FillBasketHistograms(current_basket, event_weight_, current_process_, reco_ch_1, reco_ch_2);
+   
+   if ( current_assoc_dec_ >= 0 )
+   {
+      histograms->FillBasketHistogramsAssoc(current_basket, event_weight_, current_assoc_dec_, reco_ch_1, reco_ch_2);
+   }
 
 }
 //===============================
-
-
-
-
-
-
-
-
 
 
 

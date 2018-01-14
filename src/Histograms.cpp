@@ -58,7 +58,19 @@ Histograms::Histograms( float lumi)
    s_variable_decay_.push_back("H_to_2l2X");
    s_variable_decay_.push_back("H_to_4l_4_from_H");
    s_variable_decay_.push_back("H_to_4l_not_4_from_H");
-
+   
+   // Associated decay
+   s_assoc_decay_.push_back("WH_4_0");
+   s_assoc_decay_.push_back("WH_4_1");
+   s_assoc_decay_.push_back("ZH_4_0");
+   s_assoc_decay_.push_back("ZH_4_2");
+   s_assoc_decay_.push_back("ZH_2_2");
+   s_assoc_decay_.push_back("bbH_0");
+   s_assoc_decay_.push_back("bbH_1");
+   s_assoc_decay_.push_back("ttH_4_0");
+   s_assoc_decay_.push_back("ttH_4_1");
+   s_assoc_decay_.push_back("ttH_4_2");
+   s_assoc_decay_.push_back("ttH_2_2");
 
    // Match H leptons status
    s_H_lep_match_status_.push_back("H_4");
@@ -360,6 +372,11 @@ Histograms::Histograms( float lumi)
       
       for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
       {
+         histo_label_ = ";;# of expected events";
+         histo_name_ = "h_BC_in_SR_basket_" +  s_process_.at(i_proc) + "_" + s_reco_ch_.at(i_rc);
+         h_BC_in_SR_basket_[i_proc][i_rc] = new TH1F(histo_name_, histo_label_, 8, 0, 8 );
+         
+         
          for ( int i_var = 0; i_var < Counters::num_of_vars; i_var++ )
          {
             histo_label_ = ";" + var.vec_var[i_var].label + ";" + "# of events";
@@ -487,6 +504,17 @@ Histograms::Histograms( float lumi)
          } // end i_sort
       } // end i_gc
    } // end i_proc
+
+
+   for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
+   {
+      for ( int i_assoc = 0; i_assoc < Counters::num_of_associated_decays; i_assoc++ )
+      {
+         histo_label_ = ";;# of expected events";
+         histo_name_ = "h_BC_in_SR_basket_assoc_dec_" +  s_assoc_decay_.at(i_assoc) + "_" + s_reco_ch_.at(i_rc);
+         h_BC_in_SR_basket_assoc_dec_[i_assoc][i_rc] = new TH1F(histo_name_, histo_label_, 8, 0, 8 );
+      }
+   }
    
    
    for ( int i_roc = 0; i_roc < Counters::num_of_ROCs; i_roc++ )
@@ -707,6 +735,30 @@ void Histograms::FillBkgROC( float var_value, int ROC_num, float weight )
 
 
 
+//================================================================================================
+void Histograms::FillBasketHistograms( int var_value, float weight, int proc, int rc_1, int rc_2 )
+{
+   h_BC_in_SR_basket_[proc][rc_1]->Fill(var_value, weight);
+   h_BC_in_SR_basket_[proc][rc_1]->Fill(7., weight);
+   h_BC_in_SR_basket_[proc][rc_2]->Fill(var_value, weight);
+   h_BC_in_SR_basket_[proc][rc_2]->Fill(7., weight);
+}
+//================================================================================================
+
+
+
+//================================================================================================
+void Histograms::FillBasketHistogramsAssoc( int var_value, float weight, int assoc_dec, int rc_1, int rc_2 )
+{
+   h_BC_in_SR_basket_assoc_dec_[assoc_dec][rc_1]->Fill(var_value, weight);
+   h_BC_in_SR_basket_assoc_dec_[assoc_dec][rc_1]->Fill(7., weight);
+   h_BC_in_SR_basket_assoc_dec_[assoc_dec][rc_2]->Fill(var_value, weight);
+   h_BC_in_SR_basket_assoc_dec_[assoc_dec][rc_2]->Fill(7., weight);
+}
+//================================================================================================
+
+
+
 //==================================================
 void Histograms::SaveHistograms( TString file_name )
 {
@@ -724,6 +776,8 @@ void Histograms::SaveHistograms( TString file_name )
    
      for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
       {
+         h_BC_in_SR_basket_[i_proc][i_rc]->Write();
+         
          for ( int i_var = 0; i_var < Counters::num_of_vars; i_var++ )
          {
             h_bc_in_sig_reg_[i_var][i_proc][i_rc]->Write();
@@ -777,6 +831,15 @@ void Histograms::SaveHistograms( TString file_name )
             h_eta_gen_H_lep_in_pt_acc_[i_proc][i_gc][i_sort]->Write();
             h_eta_reco_bc_in_sig_reg_and_pass_triger_[i_proc][i_gc][i_sort]->Write();
          }
+      }
+   }
+   
+   
+   for ( int i_rc = 0; i_rc < Counters::num_of_reco_ch; i_rc++ )
+   {
+      for ( int i_assoc = 0; i_assoc < Counters::num_of_associated_decays; i_assoc++ )
+      {
+         h_BC_in_SR_basket_assoc_dec_[i_assoc][i_rc]->Write();
       }
    }
    
@@ -851,230 +914,151 @@ void Histograms::SaveHistograms( TString file_name )
 
 
 
+//=============================================
+//void Histograms::PlotCategories()
+//{
+//   TCanvas *c_BC_in_SR_baskets_all = new TCanvas("c_BC_in_SR_baskets_all", "c_BC_in_SR_baskets_all", 1500, 500 );
+//    DrawByProdmodes(cBCInSRBasketsAll,hBCInSRBaskets,-1);
+//
+//
+//
+//
+//
+//
+//
+//
+//   
+//
+//
+//    SaveCanvas(outDir,cBCInSRBasketsAll,tagOut);
+//
+//
+//
+//
+//    TCanvas* cBCInSRBasketEfficiency[nProcesses];
+//    TH1F* hProdModes[nProcesses]; for(int pr=0; pr<nProcesses; pr++) hProdModes[pr] = (TH1F*)hBCInSRBaskets[pr][FINALSTATE];
+//    TH1F* hAssocDecays[nAssocDecays]; for(int a=0; a<nAssocDecays; a++) hAssocDecays[a] = (TH1F*)hBCInSRBasketsAssocDecays[a][FINALSTATE];
+//    for(int pr=0; pr<nProcesses; pr++){
+//      if(!isProcessed[pr]) continue;
+//      cBCInSRBasketEfficiency[pr] = new TCanvas(Form("cBCInSR_basketEfficiency_%s",sProcess[pr].c_str()),Form("cBCInSR_basketEfficiency_%s",sProcess[pr].c_str()),500,longDim[BASKETLIST]);
+//      DrawBasketEfficiencies(cBCInSRBasketEfficiency[pr],hProdModes[pr],pr,hAssocDecays,treatH2l2XAsBkgd?assocDecayName2:assocDecayName1,treatH2l2XAsBkgd,basketLabel[BASKETLIST],lumiText,false);
+//      SaveCanvas(outDir,cBCInSRBasketEfficiency[pr],tagOut);
+//    }
+//
+//    TCanvas* cBCInSRBasketPurity = new TCanvas("cBCInSR_basketPurity","cBCInSR_basketPurity",800,longDim[BASKETLIST]);
+//    DrawBasketPurities(cBCInSRBasketPurity,hProdModes,hAssocDecays,treatH2l2XAsBkgd?assocDecayName4:assocDecayName3,false,treatH2l2XAsBkgd,basketLabel[BASKETLIST],labelMerge,lumiText);
+//    SaveCanvas(outDir,cBCInSRBasketPurity,tagOut);
+//    TCanvas* cBCInSRBasketPuritySplit = new TCanvas("cBCInSR_basketPuritySplit","cBCInSR_basketPuritySplit",800,longDim[BASKETLIST]);
+//    DrawBasketPurities(cBCInSRBasketPuritySplit,hProdModes,hAssocDecays,treatH2l2XAsBkgd?assocDecayName4:assocDecayName3,true,treatH2l2XAsBkgd,basketLabel[BASKETLIST],labelMerge,lumiText);
+//    SaveCanvas(outDir,cBCInSRBasketPuritySplit,tagOut);
+//
+//    if(isProcessed[qqZZ]){
+//
+//      TH1F* hSumSgnl = (TH1F*)hBCInSRBaskets[ggH][FINALSTATE]->Clone();
+//      for(int pr=ggH; pr<nSignalProcesses; pr++){
+//   if(!isProcessed[pr]) continue;
+//   hSumSgnl->Add(hBCInSRBaskets[pr][FINALSTATE]);
+//      }
+//      TH1F* hSumBkgd = (TH1F*)hBCInSRBaskets[qqZZ][FINALSTATE]->Clone();
+//      for(int pr=qqZZ; pr<nProcesses; pr++){
+//   if(!isProcessed[pr]) continue;
+//   hSumBkgd->Add(hBCInSRBaskets[pr][FINALSTATE]);
+//      }
+//      if(treatH2l2XAsBkgd){
+//   hSumSgnl->Add(hBCInSRBasketsAssocDecays[nAssocWDecays+nAssocZDecays-1][FINALSTATE],-1);
+//   hSumSgnl->Add(hBCInSRBasketsAssocDecays[nAssocWDecays+nAssocZDecays+nAssocttDecays-1][FINALSTATE],-1);
+//   hSumBkgd->Add(hBCInSRBasketsAssocDecays[nAssocWDecays+nAssocZDecays-1][FINALSTATE]);
+//   hSumBkgd->Add(hBCInSRBasketsAssocDecays[nAssocWDecays+nAssocZDecays+nAssocttDecays-1][FINALSTATE]);
+//      }
+//
+//      TH1F* hDenom = (TH1F*)hSumSgnl->Clone();
+//      hDenom->Add(hSumBkgd);
+//      TH1F* hSOSPB = (TH1F*)hSumSgnl->Clone();
+//      hSOSPB->Divide(hDenom);
+//      TCanvas* cBCInSRBasketSOSPB = new TCanvas("cBCInSR_basketSOSPB","cBCInSR_basketSOSPB",500,longDim[BASKETLIST]);
+//      DrawBasketSOSPB(cBCInSRBasketSOSPB,hSOSPB,basketLabel[BASKETLIST]);
+//      SaveCanvas(outDir,cBCInSRBasketSOSPB,tagOut);
+//
+//    }
+//
+//    for(int pr=0; pr<nProcesses; pr++)
+//      if(isProcessed[pr]) cout<<"process "<<sProcess[pr]<<": "<<0.5*hBCInSRBaskets[pr][FINALSTATE]->Integral()<<endl;
+//
+//    //*
+//    for(int pr=0; pr<nProcesses; pr++)
+//      for(int ba=0; ba<nBaskets; ba++)
+//   if(isProcessed[pr]) cout<<" basket #"<<ba<<", process "<<sProcess[pr]<<": "<<hBCInSRBaskets[pr][FINALSTATE]->GetBinContent(ba+1)<<endl;
+//    //*/
+//
+//  }
+//
+//
+//}
+//=============================================
+
 
 
 //=========================================================================================================
-//void Histograms::plot_1D_single( TString filename, TString variable_name, TString folder, int fs, int cat )
+//void DrawByProdMode(TCanvas *c, TH1F *histo[Counters::num_of_processes][Counters::num_of_reco_ch], int v)
 //{
-//   int plot_index = SetPlotName( variable_name);
 //
-//   TCanvas *c;
-//   if(variable_name == "M4lMain") c = new TCanvas(variable_name, variable_name, 650, 500);
-//   else c = new TCanvas(variable_name, variable_name, 600, 600);
+//  gStyle->SetOptTitle(0);
 //
-//   if ( GetVarLogX( variable_name) ) c->SetLogx();
-//   if ( GetVarLogY( variable_name) ) c->SetLogy();
+//  c->cd();
+//  c->SetTicks(0, 0);
 //
+//  Float_t max = 0.;
 //
-//   is_Djet_ = plot_index == Settings::D1jet_M4L118130 || plot_index == Settings::D2jet_M4L118130 || plot_index == Settings::D1jet || plot_index == Settings::D2jet;
-//   is_DVH_  = plot_index == Settings::DWH_M4L118130 || plot_index == Settings::DWH || plot_index == Settings::DZH_M4L118130 || plot_index == Settings::DZH ||
-//              plot_index == Settings::DVH_M4L118130 || plot_index == Settings::DVH;
-//
-//   if ( is_Djet_ )
+//   for ( int i_proc = 0; i_proc < Counters::num_of_processes; i_proc++ )
 //   {
-//      histos_1D[plot_index][fs][cat][Settings::H125VBF]->SetFillColor(Cosmetics::VBF().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125VH]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125ttH]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//   }
-//   else if ( is_DVH_ )
-//   {
-//      histos_1D[plot_index][fs][cat][Settings::H125VH]->SetFillColor(Cosmetics::VH().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125VBF]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//      histos_1D[plot_index][fs][cat][Settings::H125ttH]->SetFillColor(Cosmetics::Higgs_other().fill_color);
-//   }
-//   else
-//   {
-//      histos_1D[plot_index][fs][cat][Settings::H125]->SetFillColor(Cosmetics::Higgs_all().fill_color);
-//   }
 //
-//   histos_1D[plot_index][fs][cat][Settings::qqZZ]->SetFillColor(Cosmetics::qqZZ().fill_color);
-//   histos_1D[plot_index][fs][cat][Settings::ggZZ]->SetFillColor(Cosmetics::ggZZ().fill_color);
-//   histos_1D[plot_index][fs][cat][Settings::qqZZ]->SetLineColor(Cosmetics::qqZZ().line_color);
-//   histos_1D[plot_index][fs][cat][Settings::ggZZ]->SetLineColor(Cosmetics::ggZZ().line_color);
+//    histo[pr]->Scale(1/h[pr]->Integral(0,h[pr]->GetNbinsX()+1));
+//    Float_t maxtemp = h[pr]->GetMaximum();
+//    if(maxtemp>max) max = maxtemp;
 //
-//   if ( variable_name == "M4lMain" || variable_name == "M4lMainZoomed" || variable_name == "M4lMainHighMass" )
-//   {
-//      histos_1D_ZX_shape[plot_index][fs][cat]->SetFillColor(Cosmetics::ZX().fill_color);
-//      histos_1D_ZX_shape[plot_index][fs][cat]->SetLineColor(Cosmetics::ZX().line_color);
-//   }
-//   else
-//   {
-//      histos_1D_ZX[plot_index][fs][cat]->SetFillColor(Cosmetics::ZX().fill_color);
-//      histos_1D_ZX[plot_index][fs][cat]->SetLineColor(Cosmetics::ZX().line_color);
-//   }
+//  }
+//  Float_t cmax = logY ? 10.*max : (v==Dkinbkg?2.:v==D1jVbfHj?1.3:1.1)*max ;
+//  Float_t cminlog = max / varMinFactor[v];
 //
+//  for(int pr=0; pr<nProcesses; pr++){
+//    if(!isProcessed[pr]) continue;
+//    if(SKIPPROCESSES && skipProcess[pr]) continue;
 //
-//   histos_1D[plot_index][fs][cat][Settings::H125]->SetLineColor(Cosmetics::Higgs_all().line_color);
-//   histos_1D[plot_index][fs][cat][Settings::H125ggH]->SetLineColor(Cosmetics::Higgs_all().line_color);
-//   histos_1D[plot_index][fs][cat][Settings::H125VBF]->SetLineColor(Cosmetics::Higgs_all().line_color);
-//   histos_1D[plot_index][fs][cat][Settings::H125VH]->SetLineColor(Cosmetics::Higgs_all().line_color);
-//   histos_1D[plot_index][fs][cat][Settings::H125ttH]->SetLineColor(Cosmetics::Higgs_all().line_color);
+//    h[pr]->SetLineColor(processColor[pr]);
+//    h[pr]->SetLineWidth(2);
+//    h[pr]->SetFillStyle(0);
+//    h[pr]->SetStats(0);
+//    //if(!logY) h[pr]->SetMinimum(0);
 //
-//   histos_1D[plot_index][fs][cat][Settings::AllData]->SetBinErrorOption(TH1::kPoisson);
-//   histos_1D[plot_index][fs][cat][Settings::AllData]->SetLineColor(kBlack);
+//    if(pr==0){
+//      h[pr]->SetMaximum(cmax);
+//      h[pr]->SetMinimum(logY?cminlog:0.);
+//      h[pr]->GetYaxis()->SetTitle("normalized to 1");
+//      h[pr]->Draw("hist");
+//    }else{
+//      h[pr]->Draw("histsame");
+//    }
 //
+//    lgd->AddEntry( h[pr], processLabel[pr].c_str(), "l" );
+//  }
 //
-//   // THStack
-//   THStack *stack = new THStack( "stack", "stack" );
+//  lgd->Draw();
 //
-//   if ( variable_name == "M4lMain" || variable_name == "M4lMainZoomed" || variable_name == "M4lMainHighMass" )
-//   {
-//      stack->Add(histos_1D_ZX_shape[plot_index][fs][cat]);
-//   }
-//   else
-//   {
-//      stack->Add(histos_1D_ZX[plot_index][fs][cat]);
-//   }
+//  if(v>=0 && varCutLabel[v]!="")
+//    printInfo(varCutLabel[v],0.72,lgdLow-0.09,1.,lgdLow-0.04);
 //
-//   stack->Add(histos_1D[plot_index][fs][cat][Settings::ggZZ]);
-//   stack->Add(histos_1D[plot_index][fs][cat][Settings::qqZZ]);
+//  gPad->RedrawAxis();
 //
-//   if ( is_Djet_ )
-//   {
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->Add(histos_1D[plot_index][fs][cat][Settings::H125VH]);
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->Add(histos_1D[plot_index][fs][cat][Settings::H125ttH]);
-//      stack->Add(histos_1D[plot_index][fs][cat][Settings::H125ggH]);
-//      stack->Add(histos_1D[plot_index][fs][cat][Settings::H125VBF]);
-//   }
-//   else if ( is_DVH_ )
-//   {
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->Add(histos_1D[plot_index][fs][cat][Settings::H125VBF]);
-//      histos_1D[plot_index][fs][cat][Settings::H125ggH]->Add(histos_1D[plot_index][fs][cat][Settings::H125ttH]);
-//      stack->Add(histos_1D[plot_index][fs][cat][Settings::H125ggH]);
-//      stack->Add(histos_1D[plot_index][fs][cat][Settings::H125VH]);
-//   }
-//   else
-//   {
-//      stack->Add(histos_1D[plot_index][fs][cat][Settings::H125]);
-//   }
+//  writeExtraText = true;
+//  extraText  = "Simulation";
+//  lumi_sqrtS = "13 TeV";
+//  CMS_lumi( c, 0, 0);
 //
-//   stack->Draw("HIST");
-//
-//   float data_max = histos_1D[plot_index][fs][cat][Settings::AllData]->GetBinContent(histos_1D[plot_index][fs][cat][Settings::AllData]->GetMaximumBin());
-//   float data_max_error = histos_1D[plot_index][fs][cat][Settings::AllData]->GetBinErrorUp(histos_1D[plot_index][fs][cat][Settings::AllData]->GetMaximumBin());
-//
-//   if ( GetVarLogY(variable_name) )
-//   {
-//      stack->SetMinimum(0.2);
-//      stack->SetMaximum((data_max + data_max_error)*100);
-//   }
-//   else
-//   {
-//      stack->SetMinimum(1e-5);
-//      stack->SetMaximum((data_max + data_max_error)*1.1);
-//   }
-//
-//   if ( plot_index == Settings::M4lMain || plot_index == Settings::M4lMainZoomed )
-//   {
-//      if      ( fs == Settings::fs4e )    stack->GetXaxis()->SetTitle(Variables::M4lMain().var_X_label_4e);
-//      else if ( fs == Settings::fs4mu )   stack->GetXaxis()->SetTitle(Variables::M4lMain().var_X_label_4mu);
-//      else if ( fs == Settings::fs2e2mu ) stack->GetXaxis()->SetTitle(Variables::M4lMain().var_X_label_2e2mu);
-//      else                                stack->GetXaxis()->SetTitle(Variables::M4lMain().var_X_label);;
-//   }
-//   else
-//   {
-//      stack->GetXaxis()->SetTitle(histos_1D[plot_index][fs][cat][Settings::AllData]->GetXaxis()->GetTitle());
-//   }
-//
-//   stack->GetYaxis()->SetTitle(histos_1D[plot_index][fs][cat][Settings::AllData]->GetYaxis()->GetTitle());
-//
-//   if ( (plot_index == Settings::M4lMainZoomed) || (plot_index == Settings::M4lMainHighMass) ) stack->GetXaxis()->SetNdivisions(1005);
-//
-//   histos_1D[plot_index][fs][cat][Settings::AllData]->Draw("SAME p E1 X0");
-//
-//
-////=============
-//// L E G E N D
-////=============
-//
-//   TLegend *legend;
-//
-//   if(variable_name == "M4lMain" || variable_name == "M4lMainZoomed" || variable_name == "M4lMainHighMass" )
-//   {
-//      legend  = CreateLegend("right", histos_1D[plot_index][fs][cat][Settings::AllData],
-//                                      histos_1D[plot_index][fs][cat][Settings::H125],
-//                                      histos_1D[plot_index][fs][cat][Settings::qqZZ],
-//                                      histos_1D[plot_index][fs][cat][Settings::ggZZ],
-//                                      histos_1D_ZX_shape[plot_index][fs][cat]);
-//   }
-//   else if ( plot_index == Settings::D1jet_M4L118130 || plot_index == Settings::D1jet )
-//   {
-//      legend  = CreateLegendVBF("left", histos_1D[plot_index][fs][cat][Settings::AllData],
-//                                        histos_1D[plot_index][fs][cat][Settings::H125VBF],
-//                                        histos_1D[plot_index][fs][cat][Settings::H125ggH], // ggH = ggH + VH + ttH
-//                                        histos_1D[plot_index][fs][cat][Settings::qqZZ],
-//                                        histos_1D[plot_index][fs][cat][Settings::ggZZ],
-//                                        histos_1D_ZX[plot_index][fs][cat]);
-//   }
-//   else if ( plot_index == Settings::D2jet_M4L118130 || plot_index == Settings::D2jet )
-//   {
-//      legend  = CreateLegendVBF("right", histos_1D[plot_index][fs][cat][Settings::AllData],
-//                                         histos_1D[plot_index][fs][cat][Settings::H125VBF],
-//                                         histos_1D[plot_index][fs][cat][Settings::H125ggH], // ggH = ggH + VH + ttH
-//                                         histos_1D[plot_index][fs][cat][Settings::qqZZ],
-//                                         histos_1D[plot_index][fs][cat][Settings::ggZZ],
-//                                         histos_1D_ZX[plot_index][fs][cat]);
-//   }
-//   else if ( is_DVH_ )
-//   {
-//      legend  = CreateLegendVH("right", histos_1D[plot_index][fs][cat][Settings::AllData],
-//                                        histos_1D[plot_index][fs][cat][Settings::H125VH],
-//                                        histos_1D[plot_index][fs][cat][Settings::H125ggH], // ggH = ggH + VBF + ttH
-//                                        histos_1D[plot_index][fs][cat][Settings::qqZZ],
-//                                        histos_1D[plot_index][fs][cat][Settings::ggZZ],
-//                                        histos_1D_ZX[plot_index][fs][cat]);
-//   }
-//   else
-//   {
-//      legend = CreateLegend((plot_index == Settings::MZ1 || plot_index == Settings::MZ1_M4L118130 || plot_index == Settings::MZ2 || plot_index == Settings::KD_M4L118130) ? "left" : "right",
-//                             histos_1D[plot_index][fs][cat][Settings::AllData],
-//                             histos_1D[plot_index][fs][cat][Settings::H125],
-//                             histos_1D[plot_index][fs][cat][Settings::qqZZ],
-//                             histos_1D[plot_index][fs][cat][Settings::ggZZ],
-//                             histos_1D_ZX[plot_index][fs][cat]);
-//   }
-//
-//   legend->Draw();
-//
-////===========
-//// PLOT TEXT
-////===========
-//
-//   TPaveText *text;
-//
-//   if ( plot_index == Settings::D1jet_M4L118130 || plot_index == Settings::KD_M4L118130 || plot_index == Settings::MZ1_M4L118130 )
-//   {
-//      text = CreateCutText("right top", "118 < m_{4#font[12]{l}} < 130 GeV");
-//      text->Draw();
-//   }
-//   else if ( plot_index == Settings::D2jet_M4L118130 || plot_index == Settings::DWH_M4L118130 || plot_index == Settings::DZH_M4L118130 ||
-//             plot_index == Settings::DVH_M4L118130   || plot_index == Settings::MZ2_M4L118130)
-//   {
-//      text = CreateCutText("left top", "118 < m_{4#font[12]{l}} < 130 GeV");
-//      text->Draw();
-//   }
-//
-////=================
-//// CMS TEXT & LUMI
-////=================
-//
-//   CMS_lumi *lumi = new CMS_lumi;
-//   lumi->set_lumi(c, _lumi);
-//
-//   // Draw X-axis log scale
-//   if ( plot_index == Settings::M4lMain )
-//   {
-//      stack->GetXaxis()->SetNdivisions(10);
-//      stack->GetXaxis()->SetLabelSize(0);
-//      DrawLogX(c, cat, fs);
-//   }
-//
-//   _out_file_name = folder + "/" + variable_name + "_" + filename + "_" + _s_final_state.at(fs) + "_" + _s_category.at(cat);
-//   SavePlots(c, _out_file_name);
 //}
 //=========================================================================================================
+
+
+
 
 
 //=======================================

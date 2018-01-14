@@ -37,6 +37,7 @@
 #include "cConstants.h"
 #include "ROC.h"
 #include "Category.h"
+#include "Discriminants.h"
 
 
 // Bools
@@ -52,18 +53,11 @@
 #define USEQGTAGGING 0
 
 // Working points for MELA-only categorization
-#define USEMASSDEPWPVBF2JMELA 1
-#define WPVBF2JMELA  0.437  // ggH efficiency 0.25
-#define WPVBF1JMELA  0.697  // VBF efficiency 0.8
-#define WPWHHADRMELA 0.951  // WH efficiency  0.495
-#define WPZHHADRMELA 0.9937 // ZH efficiency  0.495
+#define USEMASSDEPWPVBF2JMELA 0
 
 // Working points for MELA+q/g categorization
 #define USEMASSDEPWPVBF2JMELAQG 0
-#define WPVBF2JMELAQG  0.363  // ggH efficiency 0.25
-#define WPVBF1JMELAQG  0.716  // VBF efficiency 0.8
-#define WPWHHADRMELAQG 0.965  // WH efficiency  0.495
-#define WPZHHADRMELAQG 0.9952 // ZH efficiency  0.495
+
 
 // MET
 #define METCUT 100
@@ -134,6 +128,9 @@ private:
    int reco_ch_1, reco_ch_2, reco_ch_3;
    int gen_ch_1, gen_ch_2, gen_ch_3;
    
+   // Working points
+   float WP_VBF2j, WP_VBF1j, WP_WHh, WP_ZHh;
+   
    // Matching statuses
    int H_lep_match_status   = -999;
    int all_lep_match_status = -999;
@@ -159,10 +156,10 @@ private:
    map<Counters::variable_pair, tuple<float, float, bool, bool> > variable_pair_map;
    
 // Probabilities
- float Pvbf, Phjj;
+   float Pvbf, Phjj;
  
 // Discriminants
-float KD, D_2j_VBF_Hjj, D_1j_VBF_Hj, D_2j_WH_hadr_Hjj, D_2j_ZH_hadr_Hjj;
+   float KD, D_2j_VBF_Hjj, D_1j_VBF_Hj, D_2j_WH_hadr_Hjj, D_2j_ZH_hadr_Hjj;
 
 // Per event lepton variables
    vector<int>   gen_H_lep_id_;

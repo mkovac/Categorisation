@@ -76,6 +76,9 @@ public:
    
    void FillSigROC( float, int, float );
    void FillBkgROC( float, int, float );
+   
+   void FillBasketHistograms( int, float, int, int, int );
+   void FillBasketHistogramsAssoc( int, float, int, int, int );
 
 
    void SaveHistograms( TString );
@@ -85,7 +88,7 @@ private:
       
    float lumi_;
    TString histo_name_, histo_label_;
-   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_decay_, s_ROC_;
+   vector<TString> s_process_, s_sort_, s_gen_ch_, s_reco_ch_, s_variable_, s_variable_decay_, s_ROC_, s_assoc_decay_;
    vector<TString> s_H_lep_match_status_, s_all_lep_match_status_, s_WH_lep_match_status_, s_ZH_lep_match_status_, s_ttH_lep_match_status_;
    
    vector<Counters::variable> ROC_to_variables;
@@ -116,9 +119,13 @@ private:
    TH1F* h_bc_in_sig_reg_match_ZH_leps_[Counters::num_of_vars][Counters::num_of_ZH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
    TH1F* h_bc_in_sig_reg_match_ttH_leps_[Counters::num_of_vars][Counters::num_of_ttH_lep_match_statuses][Counters::num_of_processes][Counters::num_of_reco_ch];
 
-   //ROCs
+   // ROCs
    TH1F* h_ROC_sig_[Counters::num_of_ROCs];
    TH1F* h_ROC_bkg_[Counters::num_of_ROCs];
+   
+   // Baskets
+   TH1F* h_BC_in_SR_basket_[Counters::num_of_processes][Counters::num_of_reco_ch];
+   TH1F* h_BC_in_SR_basket_assoc_dec_[Counters::num_of_associated_decays][Counters::num_of_reco_ch];
 
 
 //==============
